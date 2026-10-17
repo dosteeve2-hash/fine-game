@@ -1,0 +1,17 @@
+{
+  "name": "FINE Game",
+  "short_name": "FINE",
+  "description": "Joue, investis, deviens libre : le jeu de plateau d’éducation financière, jouable hors ligne.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#070e1f",
+  "theme_color": "#070e1f",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

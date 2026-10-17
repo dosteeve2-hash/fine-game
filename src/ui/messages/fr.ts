@@ -47,6 +47,7 @@ export const fr = {
   "game.noAssets": "Aucun actif pour l’instant",
   "game.actions": "Actions",
   "game.noActions": "Rien à faire pour l’instant",
+  "game.more": "Finances et options",
   "game.log": "Journal",
   "game.menu": "Menu",
   "game.newGame": "Nouvelle partie",

@@ -572,3 +572,38 @@ export function chooseBotAction(state: GameState, level: 1 | 2 | 3): Action {
   if (circle && state.circle && player.cash > state.config.circleContribution * 3) return circle;
   return { type: "endTurn" };
 }
+
+export interface PlayerSummary {
+  income: number;
+  expenses: number;
+  netWorth: number;
+  debt: number;
+  freedomTarget: number;
+}
+
+export function playerSummary(state: GameState, playerId: PlayerId): PlayerSummary {
+  const player = state.players.find(item => item.id === playerId);
+  if (!player) throw new Error("Unknown player");
+  return {
+    income: Math.round(passiveIncome(state, player)),
+    expenses: player.baseExpenses
+      + player.loans.reduce((sum, loan) => sum + Math.ceil(loan.principal * loan.interestRate), 0)
+      + player.insurance.length * state.config.insurancePremium,
+    netWorth: Math.round(netWorth(state, player)),
+    debt: player.loans.reduce((sum, loan) => sum + loan.principal, 0),
+    freedomTarget: state.config.freedomTarget
+  };
+}
+
+export function sellValue(state: GameState, owned: OwnedAsset): number {
+  return Math.floor(assetValue(state, owned) * state.config.voluntarySaleRatio);
+}
+
+export function upgradeCost(state: GameState, owned: OwnedAsset): number {
+  return (assetSpace(state, owned.assetId).upgradeCosts ?? [])[owned.level - 1] ?? 0;
+}
+
+export function buyPrice(state: GameState): number {
+  const player = currentPlayer(state);
+  return Math.ceil((state.spaces[player.position]?.price ?? 0) * player.assetDiscount);
+}

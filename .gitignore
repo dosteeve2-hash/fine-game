@@ -4,3 +4,6 @@ dist
 .env*
 *.log
 _wt-*
+out
+next-env.d.ts
+*.tsbuildinfo
