@@ -7,7 +7,7 @@ describe("insurance", () => {
     const state = stateAt(1);
     const bought = applyAction(state, { type: "buyInsurance", insuranceType: "property" }).state;
     expect(bought.players[0]?.insurance).toContain("property");
-    expect(bought.players[0]?.cash).toBe(state.players[0]?.cash - state.config.insurancePremium);
+    expect(bought.players[0]?.cash).toBe((state.players[0]?.cash ?? 0) - state.config.insurancePremium);
   });
 
   it("does not offer duplicate coverage", () => {

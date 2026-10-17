@@ -6,7 +6,7 @@ import { addOwnedAsset, config, stateAt } from "./helpers";
 describe("victory", () => {
   it("declares freedom only after the configured consecutive turns", () => {
     const victoryConfig: GameConfig = { ...config, freedomTurns: 1 };
-    let state = addOwnedAsset(stateAt(1), 0, 1);
+    let state = addOwnedAsset(stateAt(1), 0, 1, 3);
     state = { ...state, config: victoryConfig };
     const result = applyAction(state, { type: "endTurn" }).state;
     expect(getWinner(result)).toBe("player-1");

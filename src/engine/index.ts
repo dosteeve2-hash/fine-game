@@ -18,7 +18,7 @@ import type {
 export type * from "./types";
 
 const board = boardData as BoardSpace[];
-const events = eventData as GameCard[];
+const eventDeck = eventData as GameCard[];
 const opportunities = opportunityData as GameCard[];
 const insuranceTypes: InsuranceType[] = ["property", "health", "harvest", "breakdown"];
 
@@ -379,7 +379,7 @@ function applyActionInternal(state: GameState, action: Action): { state: GameSta
       updated = { ...updated, players: updated.players.map(item => item.id === player.id ? { ...item, cash: item.cash - paid } : item) };
       emitted.push({ type: "tax.paid", playerId: player.id, amount: paid });
     } else if (space?.type === "event" || space?.type === "opportunity") {
-      const deck = space.type === "event" ? events : opportunities;
+      const deck = space.type === "event" ? eventDeck : opportunities;
       const draw = random(updated);
       const card = deck[Math.floor(draw.value * deck.length)];
       if (card) {

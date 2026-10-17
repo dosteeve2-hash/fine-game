@@ -39,7 +39,7 @@ const modes = Object.entries(configs) as Array<[GameConfig["mode"], GameConfig]>
 const results: Record<string, ModeStatistics> = {};
 
 for (const [modeIndex, [mode, config]] of modes.entries()) {
-  const stats: ModeStatistics = {
+  const stats: Omit<ModeStatistics, "finishRateBeforeMaxPercent" | "averageTurns" | "winShareBySeatPercent" | "winRateByLevelPercent" | "criteriaMet"> = {
     games: 1000,
     finishedEarly: 0,
     turnsTotal: 0,
