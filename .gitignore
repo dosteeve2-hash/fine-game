@@ -7,3 +7,5 @@ _wt-*
 out
 next-env.d.ts
 *.tsbuildinfo
+
+.vercel

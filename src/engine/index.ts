@@ -346,14 +346,15 @@ function applyActionInternal(state: GameState, action: Action): { state: GameSta
   if (action.type === "roll") {
     const first = random(state);
     const second = random({ ...state, randomState: first.randomState });
-    const move = Math.floor(first.value * 6) + Math.floor(second.value * 6) + 2;
+    const dice: [number, number] = [Math.floor(first.value * 6) + 1, Math.floor(second.value * 6) + 1];
+    const move = dice[0] + dice[1];
     const raw = player.position + move;
     const passedStart = raw >= state.spaces.length;
     const position = raw % state.spaces.length;
     const space = state.spaces[position];
     let updatedPlayer = { ...player, position };
     let updated: GameState = { ...state, players: state.players.map(item => item.id === player.id ? updatedPlayer : item), randomState: second.randomState, phase: "actions", pendingBank: space?.type === "bank", pendingOpportunity: space?.type === "opportunity" };
-    const emitted: GameEvent[] = [{ type: "dice.rolled", playerId: player.id, amount: move }, { type: "space.landed", playerId: player.id, amount: position }];
+    const emitted: GameEvent[] = [{ type: "dice.rolled", playerId: player.id, amount: move, dice }, { type: "space.landed", playerId: player.id, amount: position }];
     if (passedStart) {
       const salary = player.turnsPlayed >= state.config.salaryReductionAfterTurns
         ? Math.max(0, state.config.salary - state.config.salaryReduction + player.salaryBonus)

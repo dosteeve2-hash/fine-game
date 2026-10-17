@@ -130,6 +130,7 @@ export interface GameEvent {
   amount?: number;
   assetId?: string;
   cardKey?: string;
+  dice?: [number, number];
 }
 
 export interface CardEffect {
