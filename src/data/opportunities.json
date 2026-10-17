@@ -1,0 +1,18 @@
+[
+  {"id":"discounted_property","titleKey":"opportunity.discounted_property.title","textKey":"opportunity.discounted_property.text","effect":{"type":"asset_discount","multiplier":0.8}},
+  {"id":"small_subsidy","titleKey":"opportunity.small_subsidy.title","textKey":"opportunity.small_subsidy.text","effect":{"type":"cash","amount":160}},
+  {"id":"business_partner","titleKey":"opportunity.business_partner.title","textKey":"opportunity.business_partner.text","effect":{"type":"cash","amount":100}},
+  {"id":"skills_training","titleKey":"opportunity.skills_training.title","textKey":"opportunity.skills_training.text","effect":{"type":"salary_bonus","amount":45,"turns":6}},
+  {"id":"cooperative_order","titleKey":"opportunity.cooperative_order.title","textKey":"opportunity.cooperative_order.text","effect":{"type":"cash","amount":190}},
+  {"id":"equipment_lease","titleKey":"opportunity.equipment_lease.title","textKey":"opportunity.equipment_lease.text","effect":{"type":"cash","amount":80}},
+  {"id":"microgrant","titleKey":"opportunity.microgrant.title","textKey":"opportunity.microgrant.text","effect":{"type":"cash","amount":220}},
+  {"id":"export_contract","titleKey":"opportunity.export_contract.title","textKey":"opportunity.export_contract.text","effect":{"type":"cash","amount":175}},
+  {"id":"shared_workspace","titleKey":"opportunity.shared_workspace.title","textKey":"opportunity.shared_workspace.text","effect":{"type":"base_expenses","amount":-20}},
+  {"id":"digital_upgrade","titleKey":"opportunity.digital_upgrade.title","textKey":"opportunity.digital_upgrade.text","effect":{"type":"cash","amount":135}},
+  {"id":"community_tender","titleKey":"opportunity.community_tender.title","textKey":"opportunity.community_tender.text","effect":{"type":"cash","amount":205}},
+  {"id":"market_stall","titleKey":"opportunity.market_stall.title","textKey":"opportunity.market_stall.text","effect":{"type":"cash","amount":115}},
+  {"id":"solar_rebate","titleKey":"opportunity.solar_rebate.title","textKey":"opportunity.solar_rebate.text","effect":{"type":"cash","amount":180}},
+  {"id":"new_client","titleKey":"opportunity.new_client.title","textKey":"opportunity.new_client.text","effect":{"type":"cash","amount":145}},
+  {"id":"business_course","titleKey":"opportunity.business_course.title","textKey":"opportunity.business_course.text","effect":{"type":"salary_bonus","amount":30,"turns":8}},
+  {"id":"repair_voucher","titleKey":"opportunity.repair_voucher.title","textKey":"opportunity.repair_voucher.text","effect":{"type":"cash","amount":90}}
+]
