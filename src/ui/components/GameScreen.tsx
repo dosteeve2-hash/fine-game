@@ -1,113 +1,187 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { motion } from "framer-motion";
+import { Keyboard, LogOut, Menu } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import type { Action, GameState } from "../../engine";
-import { useI18n } from "../i18n";
-import { playerColors } from "../theme";
-import type { LogEntry } from "../useGame";
-import { ActionPanel } from "./ActionPanel";
-import { BoardMap } from "./BoardMap";
-import { CardToast, LogFeed } from "./Feed";
-import { PlayerStrip } from "./PlayerStrip";
-import { TileCard } from "./TileCard";
+import { useAudio } from "../audio/AudioProvider";
+import { Board } from "../board/Board";
+import { locales, useI18n } from "../i18n";
+import { iconStroke } from "../icons";
+import type { LogEntry, Stage } from "../useGame";
+import { ActionBar, FinanceSheet, useActionModel } from "./Actions";
+import { BoardCenter } from "./BoardCenter";
+import { CardReveal } from "./CardReveal";
+import { CoinLayer } from "./CoinLayer";
+import { Fino } from "./Fino";
+import { LogFeed } from "./LogFeed";
+import { Notices } from "./Notices";
+import { Players } from "./Players";
+import { Sheet } from "./Sheet";
+import { SoundControl } from "./SoundControl";
+import { SpaceDetails } from "./SpaceDetails";
 
 interface Props {
-  state: GameState;
+  truth: GameState;
+  view: GameState;
+  stage: Stage;
   names: string[];
   log: LogEntry[];
-  botTurn: boolean;
+  busy: boolean;
+  thinking: boolean;
   onAct: (action: Action) => void;
   onLeave: () => void;
+  onDismissCard: () => void;
+  onDismissNotice: (id: number) => void;
+  onCoinsDone: (id: number) => void;
 }
 
-export function GameScreen({ state, names, log, botTurn, onAct, onLeave }: Props) {
-  const { t, money } = useI18n();
+export function GameScreen({ truth, view, stage, names, log, busy, thinking, onAct, onLeave, onDismissCard, onDismissNotice, onCoinsDone }: Props) {
+  const { t, d, locale, setLocale } = useI18n();
+  const { toggleMute, play } = useAudio();
   const [menu, setMenu] = useState(false);
-  const index = state.currentPlayerIndex;
-  const player = state.players[index];
-  const lastRoll = [...log].reverse().find(entry => entry.event.type === "dice.rolled");
-  const round = Math.floor(state.turn / state.players.length) + 1;
+  const [finances, setFinances] = useState(false);
+  const [spaceSheet, setSpaceSheet] = useState<number | null>(null);
+  const current = truth.players[truth.currentPlayerIndex];
+  const humanTurn = Boolean(current && !current.isBot);
+  const model = useActionModel(truth);
+  const disabled = busy || !humanTurn;
+  const round = Math.floor(view.turn / view.players.length) + 1;
+  const sheetSpace = spaceSheet !== null ? view.spaces[spaceSheet] : undefined;
+  const status = !humanTurn
+    ? t("game.thinking", { name: names[truth.currentPlayerIndex] ?? "" })
+    : busy
+      ? stage.dice?.rolling
+        ? t("game.rolling")
+        : t("game.wait")
+      : null;
+
+  const act = useCallback((action: Action) => {
+    play("click");
+    onAct(action);
+  }, [onAct, play]);
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) return;
+      if (event.key === "Escape") {
+        if (stage.card) onDismissCard();
+        setMenu(false);
+        setFinances(false);
+        setSpaceSheet(null);
+        return;
+      }
+      if (event.key === "m" || event.key === "M") {
+        toggleMute();
+        return;
+      }
+      if (event.key === " " || event.code === "Space") {
+        if (target?.tagName === "BUTTON" && !target.hasAttribute("data-primary-action")) return;
+        event.preventDefault();
+        if (stage.card) {
+          onDismissCard();
+          return;
+        }
+        if (menu || finances || spaceSheet !== null || disabled || !model.primary) return;
+        act(model.primary.action);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [act, disabled, finances, menu, model.primary, onDismissCard, spaceSheet, stage.card, toggleMute]);
+
+  const header = (
+    <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
+        <Fino size={28} mood={stage.mood === "celebrate" ? "celebrate" : "idle"} />
+        <span className="font-serif text-2xl font-black italic leading-none text-gold">FINE</span>
+      </div>
+      <span className="ml-1 rounded-md border border-line2 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-text2">{t("game.round", { n: round })}</span>
+      <div className="ml-auto flex items-center gap-2">
+        <SoundControl />
+        <button type="button" onClick={() => setMenu(true)} aria-label={t("game.menu")} className="flex h-11 w-11 items-center justify-center rounded-xl border border-line2 text-text2 hover:border-gold hover:text-gold2">
+          <Menu size={19} strokeWidth={iconStroke} />
+        </button>
+      </div>
+    </div>
+  );
+
+  const bar = <ActionBar model={model} disabled={disabled} status={status} onAct={act} onFinances={() => setFinances(true)} />;
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-3 px-3 pb-8 pt-3">
-      <header className="flex items-center justify-between">
-        <span className="font-serif text-2xl italic font-black text-gold">FINE</span>
-        <span className="font-mono text-xs text-text3">{t("game.round", { n: round })}</span>
-        <button type="button" onClick={() => setMenu(true)} className="min-h-10 rounded-lg border border-line2 px-3 text-xs text-text2">
-          {t("game.menu")}
-        </button>
-      </header>
+    <motion.main className="flex h-dvh w-full flex-col overflow-hidden lg:flex-row" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
+      <div className="shrink-0 px-3 pt-[max(8px,env(safe-area-inset-top))] lg:hidden">{header}</div>
+      <div className="shrink-0 px-3 pt-2 lg:hidden">
+        <Players state={view} names={names} compact />
+      </div>
 
-      <PlayerStrip state={state} names={names} />
-
-      <BoardMap state={state}>
-        <div className="font-mono text-[10px] uppercase tracking-wider text-text3">{t("game.turnOf", { name: names[index] ?? "" })}</div>
-        <div className="mt-1 h-1 w-10 rounded-full" style={{ background: playerColors[index] }} />
-        <AnimatePresence mode="popLayout">
-          {lastRoll && (
-            <motion.div
-              key={lastRoll.id}
-              initial={{ rotate: -200, scale: 0.4, opacity: 0 }}
-              animate={{ rotate: 0, scale: 1, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 160, damping: 14 }}
-              className="mt-3 flex h-14 w-14 items-center justify-center rounded-2xl border border-gold bg-bg2 font-mono text-2xl font-semibold text-gold2"
-              aria-label={`${lastRoll.event.amount ?? ""}`}
-            >
-              {lastRoll.event.amount}
-            </motion.div>
-          )}
-        </AnimatePresence>
-        {state.circle && (
-          <div className="mt-3 rounded-lg border border-cyan/40 px-2 py-1 font-mono text-[10px] text-cyan">
-            {t("game.circle")} · {t("game.circlePot", { amount: money(state.circle.pot) })}
-          </div>
-        )}
-      </BoardMap>
-
-      <TileCard state={state} names={names} />
-
-      <section className="rounded-xl border border-line2 bg-bg2 p-3">
-        {botTurn ? (
-          <p className="py-2 text-center text-sm text-text2" aria-live="polite">
-            {t("game.botThinking", { name: player ? names[index] ?? "" : "" })}
-          </p>
-        ) : (
-          <ActionPanel state={state} disabled={false} onAct={onAct} />
-        )}
+      <section className="relative min-h-0 min-w-0 flex-1 p-2 lg:p-6 xl:p-8">
+        <Board
+          view={view}
+          stage={stage}
+          onOpenSpace={index => {
+            play("click");
+            setSpaceSheet(index);
+          }}
+          center={layout => <BoardCenter view={view} stage={stage} names={names} thinking={thinking} layout={layout} />}
+        />
       </section>
 
-      <LogFeed state={state} names={names} log={log} />
-      <CardToast state={state} names={names} log={log} />
+      <div className="shrink-0 px-3 pb-[max(10px,env(safe-area-inset-bottom))] pt-1 lg:hidden">{bar}</div>
 
-      <AnimatePresence>
-        {menu && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 flex items-end justify-center bg-black/60 p-4 sm:items-center"
-            onClick={() => setMenu(false)}
-          >
-            <motion.div
-              initial={{ y: 30 }}
-              animate={{ y: 0 }}
-              exit={{ y: 30 }}
-              onClick={event => event.stopPropagation()}
-              className="w-full max-w-sm space-y-2 rounded-2xl border border-line2 bg-bg2 p-4"
-              role="dialog"
-              aria-modal="true"
-            >
-              <button type="button" onClick={onLeave} className="min-h-12 w-full rounded-xl border border-line2 bg-bg3 text-sm">
-                {t("game.newGame")}
-              </button>
-              <button type="button" onClick={() => setMenu(false)} className="min-h-12 w-full rounded-xl bg-gold text-sm font-medium text-bg">
-                {t("game.close")}
-              </button>
-            </motion.div>
-          </motion.div>
+      <aside className="hidden h-dvh w-[380px] shrink-0 flex-col gap-4 border-l border-line bg-bg2/70 p-5 lg:flex xl:w-[420px]">
+        {header}
+        <Players state={view} names={names} />
+        {stage.focus !== null && <SpaceDetails state={view} names={names} index={stage.focus} compact />}
+        <div className="min-h-0 flex-1">
+          <LogFeed state={view} names={names} log={log} />
+        </div>
+        {bar}
+        <p className="flex items-center gap-1.5 font-mono text-[10px] text-text3">
+          <Keyboard size={12} strokeWidth={iconStroke} aria-hidden />
+          {t("game.shortcuts")}
+        </p>
+      </aside>
+
+      <Notices notices={stage.notices} state={view} names={names} onDismiss={onDismissNotice} />
+      <CoinLayer coins={stage.coins} onDone={onCoinsDone} />
+      <CardReveal card={stage.card} state={view} names={names} onClose={onDismissCard} />
+      <FinanceSheet open={finances} model={model} disabled={disabled} onAct={act} onClose={() => setFinances(false)} />
+
+      <Sheet open={spaceSheet !== null} title={sheetSpace ? d(sheetSpace.titleKey) : ""} onClose={() => setSpaceSheet(null)}>
+        {spaceSheet !== null && (
+          <div className="pb-3">
+            <SpaceDetails state={view} names={names} index={spaceSheet} />
+          </div>
         )}
-      </AnimatePresence>
-    </main>
+      </Sheet>
+
+      <Sheet open={menu} title={t("game.menu")} onClose={() => setMenu(false)}>
+        <div className="space-y-4 pb-3">
+          <div className="flex gap-1.5" role="group" aria-label={t("setup.language")}>
+            {locales.map(code => (
+              <button
+                key={code}
+                type="button"
+                onClick={() => setLocale(code)}
+                aria-pressed={locale === code}
+                className={`min-h-11 flex-1 rounded-xl border font-mono text-xs uppercase ${locale === code ? "border-gold bg-gold text-bg" : "border-line2 text-text2"}`}
+              >
+                {code}
+              </button>
+            ))}
+          </div>
+          <div className="h-56 lg:hidden">
+            <LogFeed state={view} names={names} log={log} limit={20} />
+          </div>
+          <button type="button" onClick={onLeave} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-line2 bg-bg3 text-sm text-text hover:border-red hover:text-red">
+            <LogOut size={17} strokeWidth={iconStroke} aria-hidden />
+            {t("game.leave")}
+          </button>
+          <p className="text-center text-xs text-text3">{t("game.leaveHint")}</p>
+        </div>
+      </Sheet>
+    </motion.main>
   );
 }

@@ -1,7 +1,9 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import { useRef } from "react";
 import type { GameConfig } from "../engine";
+import { AudioProvider } from "./audio/AudioProvider";
 import { GameScreen } from "./components/GameScreen";
 import { ResultScreen } from "./components/ResultScreen";
 import { SetupScreen } from "./components/SetupScreen";
@@ -17,29 +19,50 @@ function Screens() {
     game.start(config, seats);
   };
 
-  if (!game.state) return <SetupScreen hasSave={game.hasSave} onStart={start} onResume={game.resume} />;
+  const screen = !game.view || !game.truth ? "setup" : game.view.phase === "finished" ? "result" : "game";
 
-  if (game.state.phase === "finished") {
-    return (
-      <ResultScreen
-        state={game.state}
-        names={game.names}
-        onHome={game.discard}
-        onReplay={() => {
-          if (last.current) game.start(last.current.config, last.current.seats);
-          else game.discard();
-        }}
-      />
-    );
-  }
-
-  return <GameScreen state={game.state} names={game.names} log={game.log} botTurn={game.botTurn} onAct={game.act} onLeave={game.leave} />;
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div key={screen} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+        {screen === "setup" && <SetupScreen hasSave={game.hasSave} onStart={start} onResume={game.resume} />}
+        {screen === "result" && game.view && (
+          <ResultScreen
+            state={game.view}
+            names={game.names}
+            onHome={game.discard}
+            onReplay={() => {
+              if (last.current) game.start(last.current.config, last.current.seats);
+              else game.discard();
+            }}
+          />
+        )}
+        {screen === "game" && game.view && game.truth && (
+          <GameScreen
+            truth={game.truth}
+            view={game.view}
+            stage={game.stage}
+            names={game.names}
+            log={game.log}
+            busy={game.busy}
+            thinking={game.thinking}
+            onAct={action => void game.act(action)}
+            onLeave={game.leave}
+            onDismissCard={game.dismissCard}
+            onDismissNotice={game.dismissNotice}
+            onCoinsDone={game.removeCoins}
+          />
+        )}
+      </motion.div>
+    </AnimatePresence>
+  );
 }
 
 export function GameApp() {
   return (
     <I18nProvider>
-      <Screens />
+      <AudioProvider>
+        <Screens />
+      </AudioProvider>
     </I18nProvider>
   );
 }
