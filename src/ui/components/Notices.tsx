@@ -75,7 +75,7 @@ function NoticeItem({ notice, state, names, onDismiss }: { notice: Notice; state
 
 export function Notices({ notices, state, names, onDismiss }: Props) {
   return (
-    <ul className="pointer-events-none fixed inset-x-0 top-[max(56px,calc(env(safe-area-inset-top)+52px))] z-40 mx-auto flex w-full max-w-sm flex-col gap-2 px-4 lg:left-auto lg:right-[440px] lg:top-6 lg:mx-0 lg:max-w-sm" aria-live="polite">
+    <ul className="pointer-events-none fixed inset-x-0 top-[calc(env(safe-area-inset-top)+124px)] z-40 mx-auto flex w-full max-w-sm flex-col gap-2 px-4 lg:right-[380px] lg:top-8 xl:right-[420px]" aria-live="polite">
       <AnimatePresence initial={false}>
         {notices.map(notice => (
           <NoticeItem key={notice.id} notice={notice} state={state} names={names} onDismiss={onDismiss} />

@@ -118,7 +118,7 @@ export function ActionBar({ model, disabled, status, onAct, onFinances }: BarPro
             whileTap={{ scale: 0.96 }}
             disabled={disabled}
             onClick={() => onAct(choice.action)}
-            className="min-h-14 flex-1 rounded-2xl border border-line2 bg-bg3 px-3 text-sm font-medium text-text transition-colors hover:border-gold disabled:opacity-40"
+            className="min-h-14 shrink-0 rounded-2xl border border-line2 bg-bg3 px-3 text-[13px] font-medium leading-tight text-text transition-colors hover:border-gold disabled:opacity-40 lg:flex-1 lg:text-sm"
           >
             {choice.label}
           </motion.button>
@@ -138,11 +138,10 @@ export function ActionBar({ model, disabled, status, onAct, onFinances }: BarPro
             animate={{ scale: 1, opacity: 1 }}
             disabled={disabled}
             onClick={() => onAct(primary.action)}
-            className="relative flex min-h-14 flex-[1.4] items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gold px-5 font-semibold text-bg shadow-[0_12px_30px_-12px_rgba(240,168,50,0.85)] transition-colors hover:bg-gold2 disabled:opacity-50"
+            className="relative flex min-h-14 min-w-0 flex-1 items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gold px-5 font-semibold text-bg shadow-[0_12px_30px_-12px_rgba(240,168,50,0.85)] transition-colors hover:bg-gold2 disabled:opacity-50"
           >
             <PrimaryIcon size={20} strokeWidth={2} aria-hidden />
             <span className="truncate">{primary.label}</span>
-            <kbd className="ml-1 hidden rounded border border-bg/30 px-1 font-mono text-[10px] font-normal opacity-70 lg:inline">␣</kbd>
           </motion.button>
         )
       )}

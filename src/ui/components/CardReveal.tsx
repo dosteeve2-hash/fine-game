@@ -19,7 +19,7 @@ interface Props {
 function CardBack() {
   return (
     <div className="absolute inset-0 overflow-hidden rounded-[22px] border border-gold/60 bg-[#0c1528]" style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
-      <svg viewBox="0 0 200 290" className="h-full w-full" aria-hidden>
+      <svg viewBox="0 0 200 290" preserveAspectRatio="xMidYMid slice" className="h-full w-full" aria-hidden>
         <defs>
           <pattern id="card-weave" width="20" height="20" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
             <path d="M0 10h20M10 0v20" stroke="#f0a832" strokeOpacity="0.16" strokeWidth="1" />
@@ -84,7 +84,7 @@ export function CardReveal({ card, state, names, onClose }: Props) {
         >
           <motion.div
             className="relative"
-            style={{ width: "min(330px, 86vw)", aspectRatio: "200 / 290", perspective: 1400 }}
+            style={{ width: "min(330px, 86vw)", aspectRatio: "200 / 272", perspective: 1400 }}
             initial={{ y: 60, scale: 0.85, rotate: -4 }}
             animate={{ y: 0, scale: 1, rotate: 0 }}
             exit={{ y: 40, scale: 0.9, opacity: 0 }}
@@ -104,10 +104,11 @@ export function CardReveal({ card, state, names, onClose }: Props) {
                   <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-[#0c1528]">{isOpportunity ? t("card.opportunity") : t("card.event")}</span>
                   <span className="ml-auto truncate font-mono text-[10px] text-[#0c1528]/75">{player ? t("card.for", { name: names[card.player] ?? "" }) : ""}</span>
                 </div>
-                <div className="flex flex-1 flex-col px-5 pb-4 pt-4">
+                <div className="relative flex flex-1 flex-col overflow-hidden px-5 pb-4 pt-4">
+                  <Icon size={190} strokeWidth={1} color={tone} className="pointer-events-none absolute -right-10 top-24 opacity-[0.13]" aria-hidden />
                   <h2 className="font-serif text-[26px] font-black italic leading-[1.05]">{d(`${prefix}.title`)}</h2>
                   <p className="mt-2 text-[15px] leading-snug text-[#30405f]">{d(`${prefix}.text`)}</p>
-                  {card.amount !== 0 && (
+                  {card.amount !== 0 && found?.card.effect.type === "cash" && (
                     <div className={`mt-3 self-start rounded-xl px-3 py-1.5 font-mono text-2xl font-semibold ${card.amount > 0 ? "bg-[#22d98a]/20 text-[#0b7a4b]" : "bg-[#ef4444]/15 text-[#b91c1c]"}`}>
                       {card.amount > 0 ? "+" : "−"}
                       {money(Math.abs(card.amount))}
@@ -120,7 +121,7 @@ export function CardReveal({ card, state, names, onClose }: Props) {
                       {t("card.insured", { amount: money(saved) })}
                     </div>
                   )}
-                  <div className="mt-auto rounded-2xl border border-[#c07d10]/30 bg-[#fff8e6] p-3">
+                  <div className="relative mt-auto rounded-2xl border border-[#c07d10]/30 bg-[#fff8e6] p-3">
                     <div className="flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#c07d10]">
                       <Lightbulb size={14} strokeWidth={iconStroke} aria-hidden />
                       {t("card.realLife")}

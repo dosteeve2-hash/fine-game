@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { applyAction, chooseBotAction, createGame } from "../engine";
 import type { Action, GameConfig, GameEvent, GameState } from "../engine";
 import { audio } from "./audio/engine";
+import { findCard } from "./text";
 import type { FinoMood } from "./components/Fino";
 
 export interface LogEntry {
@@ -227,7 +228,7 @@ export function useGame() {
       const card = events.find(event => event.type === "card.resolved");
       if (card?.cardKey) {
         const deck = before.spaces[position]?.type === "opportunity" ? "opportunity" : "event";
-        const amount = card.amount ?? 0;
+        const amount = findCard(card.cardKey)?.card.effect.type === "cash" ? card.amount ?? 0 : 0;
         setMood(deck === "opportunity" || amount > 0 ? "happy" : amount < 0 ? "worried" : "surprised", 0);
         const show: CardShow = { id: nextId.current++, cardId: card.cardKey, deck, amount, player: mover, auto: Boolean(before.players[mover]?.isBot) };
         await new Promise<void>(resolve => {

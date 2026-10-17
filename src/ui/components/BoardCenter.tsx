@@ -37,6 +37,8 @@ export function BoardCenter({ view, stage, names, thinking, layout }: Props) {
   const showDeed = !landscape && layout.height > 330 && stage.focus !== null;
   const status = stage.dice?.rolling
     ? t("game.rolling")
+    : stage.hop
+      ? t("game.moving", { name: names[stage.hop.player] ?? "", n: (stage.dice?.values[0] ?? 0) + (stage.dice?.values[1] ?? 0) })
     : thinking
       ? t("game.thinking", { name: names[current] ?? "" })
       : player && !player.isBot
@@ -86,11 +88,11 @@ export function BoardCenter({ view, stage, names, thinking, layout }: Props) {
           exit={{ opacity: 0, y: -12 }}
           transition={{ type: "spring", stiffness: 260, damping: 22 }}
         >
-          <div className="flex items-center gap-3 rounded-2xl border bg-bg/90 px-4 py-2.5 shadow-2xl backdrop-blur" style={{ borderColor: playerColors[stage.banner.player] }}>
+          <div className="flex max-w-full items-center gap-3 rounded-2xl border bg-bg px-4 py-2.5 shadow-2xl" style={{ borderColor: playerColors[stage.banner.player] }}>
             <PawnShape index={stage.banner.player} size={22} active />
-            <div>
+            <div className="min-w-0">
               <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text3">{t("game.round", { n: round })}</div>
-              <div className="font-serif text-xl font-black italic leading-tight" style={{ color: playerColors[stage.banner.player] }}>
+              <div className="truncate font-serif text-lg font-black italic leading-tight lg:text-2xl" style={{ color: playerColors[stage.banner.player] }}>
                 {t("game.turnOf", { name: names[stage.banner.player] ?? "" })}
               </div>
             </div>

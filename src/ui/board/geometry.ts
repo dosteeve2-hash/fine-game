@@ -55,12 +55,12 @@ const slots: Array<[number, number]> = [
   [0.22, 0.2]
 ];
 
-export function pawnPoint(index: number, slot: number, orientation: Orientation, unit: number): { x: number; y: number } {
+export function pawnPoint(index: number, slot: number, orientation: Orientation, ux: number, uy: number): { x: number; y: number } {
   const rect = tileRect(index, orientation);
   const [dx, dy] = slots[slot] ?? [0, 0];
-  const scale = Math.min(rect.w, rect.h);
+  const scale = Math.min(rect.w * ux, rect.h * uy);
   return {
-    x: (rect.x + rect.w / 2 + dx * scale) * unit,
-    y: (rect.y + rect.h / 2 + dy * scale) * unit
+    x: (rect.x + rect.w / 2) * ux + dx * scale,
+    y: (rect.y + rect.h / 2) * uy + dy * scale
   };
 }

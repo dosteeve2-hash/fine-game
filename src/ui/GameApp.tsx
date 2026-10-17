@@ -1,6 +1,5 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
 import { useRef } from "react";
 import type { GameConfig } from "../engine";
 import { AudioProvider } from "./audio/AudioProvider";
@@ -22,8 +21,7 @@ function Screens() {
   const screen = !game.view || !game.truth ? "setup" : game.view.phase === "finished" ? "result" : "game";
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.div key={screen} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+    <div key={screen} className="screen-in">
         {screen === "setup" && <SetupScreen hasSave={game.hasSave} onStart={start} onResume={game.resume} />}
         {screen === "result" && game.view && (
           <ResultScreen
@@ -52,8 +50,7 @@ function Screens() {
             onCoinsDone={game.removeCoins}
           />
         )}
-      </motion.div>
-    </AnimatePresence>
+    </div>
   );
 }
 

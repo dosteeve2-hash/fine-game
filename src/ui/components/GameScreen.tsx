@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { Keyboard, LogOut, Menu } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import type { Action, GameState } from "../../engine";
@@ -110,7 +109,7 @@ export function GameScreen({ truth, view, stage, names, log, busy, thinking, onA
   const bar = <ActionBar model={model} disabled={disabled} status={status} onAct={act} onFinances={() => setFinances(true)} />;
 
   return (
-    <motion.main className="flex h-dvh w-full flex-col overflow-hidden lg:flex-row" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
+    <main className="flex h-dvh w-full flex-col overflow-hidden lg:flex-row">
       <div className="shrink-0 px-3 pt-[max(8px,env(safe-area-inset-top))] lg:hidden">{header}</div>
       <div className="shrink-0 px-3 pt-2 lg:hidden">
         <Players state={view} names={names} compact />
@@ -134,7 +133,7 @@ export function GameScreen({ truth, view, stage, names, log, busy, thinking, onA
         {header}
         <Players state={view} names={names} />
         {stage.focus !== null && <SpaceDetails state={view} names={names} index={stage.focus} compact />}
-        <div className="min-h-0 flex-1">
+        <div className="min-h-0 flex-1 overflow-hidden">
           <LogFeed state={view} names={names} log={log} />
         </div>
         {bar}
@@ -182,6 +181,6 @@ export function GameScreen({ truth, view, stage, names, log, busy, thinking, onA
           <p className="text-center text-xs text-text3">{t("game.leaveHint")}</p>
         </div>
       </Sheet>
-    </motion.main>
+    </main>
   );
 }

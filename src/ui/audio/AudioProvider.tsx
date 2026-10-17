@@ -23,12 +23,14 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   const unlock = useCallback(() => audio.unlock(), []);
   const play = useCallback((name: Sfx) => audio.play(name), []);
   const toggleMute = useCallback(() => {
+    const next = audio.update({ muted: !audio.settings.muted });
     audio.unlock();
-    setSettings(audio.update({ muted: !audio.settings.muted }));
+    setSettings(next);
   }, []);
   const toggleMusic = useCallback(() => {
+    const next = audio.update({ music: !audio.settings.music });
     audio.unlock();
-    setSettings(audio.update({ music: !audio.settings.music }));
+    setSettings(next);
   }, []);
   const setVolume = useCallback((volume: number) => {
     setSettings(audio.update({ volume, muted: volume === 0 }));

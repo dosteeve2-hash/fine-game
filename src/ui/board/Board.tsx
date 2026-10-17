@@ -53,16 +53,18 @@ interface TileProps {
   space: BoardSpace;
   rect: TileRect;
   unit: number;
+  ux: number;
+  uy: number;
   owner: number;
   level: number;
   onOpen: (index: number) => void;
 }
 
-function Tile({ index, space, rect, unit, owner, level, onOpen }: TileProps) {
+function Tile({ index, space, rect, unit, ux, uy, owner, level, onOpen }: TileProps) {
   const { d, money } = useI18n();
   const accent = accentFor(space);
-  const width = rect.w * unit;
-  const height = rect.h * unit;
+  const width = rect.w * ux;
+  const height = rect.h * uy;
   const isAsset = space.type === "asset";
   const band = isAsset ? Math.max(5, unit * 0.2) : 0;
   const large = unit >= 48;
@@ -82,8 +84,8 @@ function Tile({ index, space, rect, unit, owner, level, onOpen }: TileProps) {
       aria-label={`${isAsset ? d(space.titleKey) : name}${price ? ` · ${money(price)}` : ""}`}
       className="absolute overflow-hidden text-left outline-none transition-[background-color,border-color,box-shadow] duration-500 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-gold"
       style={{
-        left: rect.x * unit,
-        top: rect.y * unit,
+        left: rect.x * ux,
+        top: rect.y * uy,
         width,
         height,
         borderRadius: rect.corner ? Math.max(8, unit * 0.22) : Math.max(4, unit * 0.1),
@@ -125,7 +127,7 @@ function Tile({ index, space, rect, unit, owner, level, onOpen }: TileProps) {
         {(large || rect.corner) && (
           <span
             className="line-clamp-2 font-medium leading-[1.05] text-text"
-            style={{ fontSize: nameSize, maxWidth: "100%", overflowWrap: "anywhere" }}
+            style={{ fontSize: nameSize, maxWidth: "100%", overflowWrap: "break-word", hyphens: "auto" }}
           >
             {name}
           </span>
@@ -155,9 +157,13 @@ export function Board({ view, stage, onOpenSpace, center }: Props) {
   const { ref, width, height } = useElementSize<HTMLDivElement>();
   const orientation: Orientation = width >= height * 1.02 ? "landscape" : "portrait";
   const size = boardSize(orientation);
-  const unit = width > 0 && height > 0 ? Math.floor(Math.min(width / size.width, height / size.height) * 10) / 10 : 0;
-  const boardWidth = unit * size.width;
-  const boardHeight = unit * size.height;
+  const fitX = width / size.width;
+  const fitY = height / size.height;
+  const ux = width > 0 && height > 0 ? Math.floor(Math.min(fitX, fitY * 1.25) * 10) / 10 : 0;
+  const uy = width > 0 && height > 0 ? Math.floor(Math.min(fitY, fitX * 1.25) * 10) / 10 : 0;
+  const unit = Math.min(ux, uy);
+  const boardWidth = ux * size.width;
+  const boardHeight = uy * size.height;
   const inner = centerRect(orientation);
   const owners = new Map(view.ownedAssets.map(asset => [asset.assetId, { owner: view.players.findIndex(player => player.id === asset.ownerId), level: asset.level }]));
   const pawnSize = clamp(unit * 0.42, 15, 36);
@@ -187,6 +193,8 @@ export function Board({ view, stage, onOpenSpace, center }: Props) {
                 space={space}
                 rect={tileRect(index, orientation)}
                 unit={unit}
+                ux={ux}
+                uy={uy}
                 owner={info?.owner ?? -1}
                 level={info?.level ?? 0}
                 onOpen={onOpenSpace}
@@ -197,16 +205,16 @@ export function Board({ view, stage, onOpenSpace, center }: Props) {
           <div
             className="absolute overflow-hidden"
             style={{
-              left: inner.x * unit + unit * 0.12,
-              top: inner.y * unit + unit * 0.12,
-              width: inner.w * unit - unit * 0.24,
-              height: inner.h * unit - unit * 0.24,
+              left: inner.x * ux + unit * 0.12,
+              top: inner.y * uy + unit * 0.12,
+              width: inner.w * ux - unit * 0.24,
+              height: inner.h * uy - unit * 0.24,
               borderRadius: Math.max(10, unit * 0.25),
               background: "radial-gradient(80% 70% at 50% 35%, rgba(240,168,50,0.07) 0%, rgba(7,14,31,0) 70%)",
               border: "1px solid rgba(240,168,50,0.12)"
             }}
           >
-            {center({ orientation, unit, width: inner.w * unit - unit * 0.24, height: inner.h * unit - unit * 0.24 })}
+            {center({ orientation, unit, width: inner.w * ux - unit * 0.24, height: inner.h * uy - unit * 0.24 })}
           </div>
 
           <AnimatePresence>
@@ -215,10 +223,10 @@ export function Board({ view, stage, onOpenSpace, center }: Props) {
                 key={stage.pulse.key}
                 className="pointer-events-none absolute"
                 style={{
-                  left: pulseRect.x * unit,
-                  top: pulseRect.y * unit,
-                  width: pulseRect.w * unit,
-                  height: pulseRect.h * unit,
+                  left: pulseRect.x * ux,
+                  top: pulseRect.y * uy,
+                  width: pulseRect.w * ux,
+                  height: pulseRect.h * uy,
                   borderRadius: Math.max(5, unit * 0.12),
                   border: "2px solid #f7c060",
                   boxShadow: "0 0 24px rgba(240,168,50,0.55)"
@@ -233,7 +241,7 @@ export function Board({ view, stage, onOpenSpace, center }: Props) {
 
           {view.players.map((player, playerIndex) => {
             const position = stage.hop?.player === playerIndex ? stage.hop.position : player.position;
-            const point = pawnPoint(position, playerIndex, orientation, unit);
+            const point = pawnPoint(position, playerIndex, orientation, ux, uy);
             const active = playerIndex === view.currentPlayerIndex;
             return (
               <motion.div
