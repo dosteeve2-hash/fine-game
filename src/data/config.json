@@ -11,10 +11,10 @@
     "rentRatio": 0.4,
     "rentBaselineRatio": 0.4,
     "loanTranche": 200,
-    "loanInterest": 0.08,
+    "loanInterest": 0.04,
     "lowReputationSurcharge": 0.04,
     "maxLoanToAssetValue": 0.7,
-    "defaultLoanInterest": 0.14,
+    "defaultLoanInterest": 0.07,
     "insurancePremium": 12,
     "insuranceCoverage": 0.75,
     "familyBonus": 0.25,
@@ -25,7 +25,9 @@
     "circleMaximumMembers": 4,
     "restartCash": 250,
     "restartExpenseTurns": 5,
-    "restartExpenseMultiplier": 1.1
+    "restartExpenseMultiplier": 1.1,
+    "freedomTarget": 500,
+    "seatCashBonus": 60
   },
   "standard": {
     "mode": "standard",
@@ -39,10 +41,10 @@
     "rentRatio": 0.4,
     "rentBaselineRatio": 0.4,
     "loanTranche": 250,
-    "loanInterest": 0.08,
+    "loanInterest": 0.04,
     "lowReputationSurcharge": 0.04,
     "maxLoanToAssetValue": 0.7,
-    "defaultLoanInterest": 0.14,
+    "defaultLoanInterest": 0.07,
     "insurancePremium": 15,
     "insuranceCoverage": 0.75,
     "familyBonus": 0.25,
@@ -53,7 +55,9 @@
     "circleMaximumMembers": 4,
     "restartCash": 350,
     "restartExpenseTurns": 5,
-    "restartExpenseMultiplier": 1.1
+    "restartExpenseMultiplier": 1.1,
+    "freedomTarget": 1100,
+    "seatCashBonus": 60
   },
   "long": {
     "mode": "long",
@@ -67,10 +71,10 @@
     "rentRatio": 0.4,
     "rentBaselineRatio": 0.4,
     "loanTranche": 300,
-    "loanInterest": 0.08,
+    "loanInterest": 0.04,
     "lowReputationSurcharge": 0.04,
     "maxLoanToAssetValue": 0.7,
-    "defaultLoanInterest": 0.14,
+    "defaultLoanInterest": 0.07,
     "insurancePremium": 18,
     "insuranceCoverage": 0.75,
     "familyBonus": 0.25,
@@ -81,6 +85,8 @@
     "circleMaximumMembers": 4,
     "restartCash": 450,
     "restartExpenseTurns": 5,
-    "restartExpenseMultiplier": 1.1
+    "restartExpenseMultiplier": 1.1,
+    "freedomTarget": 1500,
+    "seatCashBonus": 60
   }
 }

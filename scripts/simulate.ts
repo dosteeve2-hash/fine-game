@@ -40,7 +40,7 @@ const results: Record<string, ModeStatistics> = {};
 
 for (const [modeIndex, [mode, config]] of modes.entries()) {
   const stats: Omit<ModeStatistics, "finishRateBeforeMaxPercent" | "averageTurns" | "winShareBySeatPercent" | "winRateByLevelPercent" | "criteriaMet"> = {
-    games: 1000,
+    games: Number(process.env.SIM_GAMES ?? 1000),
     finishedEarly: 0,
     turnsTotal: 0,
     winsBySeat: [0, 0, 0, 0],

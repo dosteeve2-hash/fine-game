@@ -121,7 +121,7 @@ export function createGame(config: GameConfig, seed: number): GameState {
     id: `player-${index + 1}`,
     isBot: config.playerTypes ? config.playerTypes[index] === "bot" : index > 0,
     botLevel: config.botLevels?.[index] ?? (index > 0 ? 2 : 1),
-    cash: config.startingCash,
+    cash: config.startingCash + index * config.seatCashBonus,
     assets: [],
     loans: [],
     insurance: [],
@@ -490,7 +490,7 @@ function applyActionInternal(state: GameState, action: Action): { state: GameSta
       const expenses = completedPlayer.baseExpenses
         + completedPlayer.loans.reduce((sum, loan) => sum + Math.ceil(loan.principal * loan.interestRate), 0)
         + completedPlayer.insurance.length * updated.config.insurancePremium;
-      const isFree = income >= expenses && completedPlayer.cash >= 0;
+      const isFree = income >= Math.max(expenses, updated.config.freedomTarget) && completedPlayer.cash >= 0;
       const streak = isFree ? completedPlayer.freedomStreak + 1 : 0;
       updated = { ...updated, players: updated.players.map(item => item.id === completedPlayer.id ? {
         ...item,
@@ -531,15 +531,13 @@ export function chooseBotAction(state: GameState, level: 1 | 2 | 3): Action {
   const actions = legalActions(state);
   if (state.phase === "roll") return { type: "roll" };
   const byType = (type: Action["type"]) => actions.filter(action => action.type === type);
+  const upgradeReserve = level === 1 ? 14 : level === 2 ? 8 : 5;
+  const upgrade = byType("upgradeAsset")[0];
+  if (upgrade && player.cash > state.config.baseExpenses * upgradeReserve) return upgrade;
   if (level === 1) {
     const purchase = byType("buyAsset")[0];
     if (purchase) return purchase;
     return { type: "endTurn" };
-  }
-  if (level === 3) {
-    const upgrades = byType("upgradeAsset");
-    const profitableUpgrade = upgrades.find(action => action.type === "upgradeAsset" && player.cash > state.config.baseExpenses * 5);
-    if (profitableUpgrade) return profitableUpgrade;
   }
   const landingSpace = state.spaces[player.position];
   if (level >= 2 && player.assets.length > 0 && landingSpace?.type === "asset" && landingSpace.assetId && landingSpace.price !== undefined
@@ -560,8 +558,8 @@ export function chooseBotAction(state: GameState, level: 1 | 2 | 3): Action {
     const space = state.spaces[player.position];
     const price = Math.ceil((space?.price ?? Infinity) * player.assetDiscount);
     const income = space?.baseIncome ?? 0;
-    const canInvest = level === 3 ? player.cash - price >= state.config.baseExpenses * 2 : player.cash - price >= state.config.baseExpenses * 3;
-    const profitable = income / Math.max(1, price) >= (level === 3 ? 0.07 : 0.09);
+    const canInvest = player.cash - price >= state.config.baseExpenses * (level === 3 ? 2 : level === 2 ? 1.5 : 1);
+    const profitable = income / Math.max(1, price) >= (level === 3 ? 0.045 : 0.055);
     if (canInvest && profitable) return purchase;
   }
   if (level >= 2 && player.assets.length > 0) {

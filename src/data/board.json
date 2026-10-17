@@ -1,42 +1,380 @@
 [
-  {"type":"start","titleKey":"space.start"},
-  {"type":"asset","titleKey":"asset.trade.kampala","assetId":"trade_kampala","family":"trade","price":240,"baseIncome":48,"rent":20,"upgradeCosts":[160,260]},
-  {"type":"event","titleKey":"space.event"},
-  {"type":"asset","titleKey":"asset.trade.accra","assetId":"trade_accra","family":"trade","price":300,"baseIncome":60,"rent":24,"upgradeCosts":[190,310]},
-  {"type":"tax","titleKey":"space.tax","amount":90},
-  {"type":"circle","titleKey":"space.circle"},
-  {"type":"asset","titleKey":"asset.agriculture.dakar","assetId":"agriculture_dakar","family":"agriculture","price":360,"baseIncome":75,"rent":30,"upgradeCosts":[220,360]},
-  {"type":"opportunity","titleKey":"space.opportunity"},
-  {"type":"asset","titleKey":"asset.agriculture.lima","assetId":"agriculture_lima","family":"agriculture","price":420,"baseIncome":88,"rent":35,"upgradeCosts":[260,420]},
-  {"type":"bank","titleKey":"space.bank"},
-  {"type":"asset","titleKey":"asset.real_estate.nairobi","assetId":"real_estate_nairobi","family":"real_estate","price":480,"baseIncome":100,"rent":40,"upgradeCosts":[300,480]},
-  {"type":"rest","titleKey":"space.rest"},
-  {"type":"asset","titleKey":"asset.real_estate.izmir","assetId":"real_estate_izmir","family":"real_estate","price":540,"baseIncome":112,"rent":45,"upgradeCosts":[340,540]},
-  {"type":"event","titleKey":"space.event"},
-  {"type":"asset","titleKey":"asset.transport.lagos","assetId":"transport_lagos","family":"transport","price":600,"baseIncome":126,"rent":50,"upgradeCosts":[380,600]},
-  {"type":"opportunity","titleKey":"space.opportunity"},
-  {"type":"asset","titleKey":"asset.transport.mumbai","assetId":"transport_mumbai","family":"transport","price":660,"baseIncome":140,"rent":56,"upgradeCosts":[420,660]},
-  {"type":"tax","titleKey":"space.tax","amount":130},
-  {"type":"asset","titleKey":"asset.energy.reykjavik","assetId":"energy_reykjavik","family":"energy","price":720,"baseIncome":154,"rent":62,"upgradeCosts":[460,720]},
-  {"type":"circle","titleKey":"space.circle"},
-  {"type":"asset","titleKey":"asset.energy.merida","assetId":"energy_merida","family":"energy","price":780,"baseIncome":168,"rent":67,"upgradeCosts":[500,780]},
-  {"type":"bank","titleKey":"space.bank"},
-  {"type":"asset","titleKey":"asset.technology.tallinn","assetId":"technology_tallinn","family":"technology","price":840,"baseIncome":182,"rent":73,"upgradeCosts":[540,840]},
-  {"type":"event","titleKey":"space.event"},
-  {"type":"asset","titleKey":"asset.technology.kigali","assetId":"technology_kigali","family":"technology","price":900,"baseIncome":198,"rent":79,"upgradeCosts":[580,900]},
-  {"type":"opportunity","titleKey":"space.opportunity"},
-  {"type":"asset","titleKey":"asset.trade.medellin","assetId":"trade_medellin","family":"trade","price":960,"baseIncome":214,"rent":86,"upgradeCosts":[620,960]},
-  {"type":"event","titleKey":"space.event"},
-  {"type":"asset","titleKey":"asset.agriculture.kananga","assetId":"agriculture_kananga","family":"agriculture","price":1020,"baseIncome":230,"rent":92,"upgradeCosts":[660,1020]},
-  {"type":"asset","titleKey":"asset.real_estate.tbilisi","assetId":"real_estate_tbilisi","family":"real_estate","price":1080,"baseIncome":246,"rent":98,"upgradeCosts":[700,1080]},
-  {"type":"asset","titleKey":"asset.transport.kyoto","assetId":"transport_kyoto","family":"transport","price":1140,"baseIncome":262,"rent":105,"upgradeCosts":[740,1140]},
-  {"type":"asset","titleKey":"asset.energy.windhoek","assetId":"energy_windhoek","family":"energy","price":1200,"baseIncome":278,"rent":111,"upgradeCosts":[780,1200]},
-  {"type":"asset","titleKey":"asset.technology.toronto","assetId":"technology_toronto","family":"technology","price":1260,"baseIncome":294,"rent":118,"upgradeCosts":[820,1260]},
-  {"type":"asset","titleKey":"asset.trade.sarajevo","assetId":"trade_sarajevo","family":"trade","price":1320,"baseIncome":310,"rent":124,"upgradeCosts":[860,1320]},
-  {"type":"asset","titleKey":"asset.agriculture.antananarivo","assetId":"agriculture_antananarivo","family":"agriculture","price":1380,"baseIncome":326,"rent":130,"upgradeCosts":[900,1380]},
-  {"type":"asset","titleKey":"asset.real_estate.porto","assetId":"real_estate_porto","family":"real_estate","price":1440,"baseIncome":342,"rent":137,"upgradeCosts":[940,1440]},
-  {"type":"asset","titleKey":"asset.transport.santiago","assetId":"transport_santiago","family":"transport","price":1500,"baseIncome":358,"rent":143,"upgradeCosts":[980,1500]},
-  {"type":"asset","titleKey":"asset.energy.oslo","assetId":"energy_oslo","family":"energy","price":1560,"baseIncome":374,"rent":150,"upgradeCosts":[1020,1560]},
-  {"type":"asset","titleKey":"asset.technology.seoul","assetId":"technology_seoul","family":"technology","price":1620,"baseIncome":390,"rent":156,"upgradeCosts":[1060,1620]},
-  {"type":"rest","titleKey":"space.rest"}
+  {
+    "type": "start",
+    "titleKey": "space.start"
+  },
+  {
+    "type": "asset",
+    "titleKey": "asset.trade.kampala",
+    "assetId": "trade_kampala",
+    "family": "trade",
+    "price": 240,
+    "baseIncome": 17,
+    "rent": 7,
+    "upgradeCosts": [
+      160,
+      260
+    ]
+  },
+  {
+    "type": "event",
+    "titleKey": "space.event"
+  },
+  {
+    "type": "asset",
+    "titleKey": "asset.trade.accra",
+    "assetId": "trade_accra",
+    "family": "trade",
+    "price": 300,
+    "baseIncome": 21,
+    "rent": 8,
+    "upgradeCosts": [
+      190,
+      310
+    ]
+  },
+  {
+    "type": "tax",
+    "titleKey": "space.tax",
+    "amount": 90
+  },
+  {
+    "type": "circle",
+    "titleKey": "space.circle"
+  },
+  {
+    "type": "asset",
+    "titleKey": "asset.agriculture.dakar",
+    "assetId": "agriculture_dakar",
+    "family": "agriculture",
+    "price": 360,
+    "baseIncome": 26,
+    "rent": 11,
+    "upgradeCosts": [
+      220,
+      360
+    ]
+  },
+  {
+    "type": "opportunity",
+    "titleKey": "space.opportunity"
+  },
+  {
+    "type": "asset",
+    "titleKey": "asset.agriculture.lima",
+    "assetId": "agriculture_lima",
+    "family": "agriculture",
+    "price": 420,
+    "baseIncome": 31,
+    "rent": 12,
+    "upgradeCosts": [
+      260,
+      420
+    ]
+  },
+  {
+    "type": "bank",
+    "titleKey": "space.bank"
+  },
+  {
+    "type": "asset",
+    "titleKey": "asset.real_estate.nairobi",
+    "assetId": "real_estate_nairobi",
+    "family": "real_estate",
+    "price": 480,
+    "baseIncome": 35,
+    "rent": 14,
+    "upgradeCosts": [
+      300,
+      480
+    ]
+  },
+  {
+    "type": "rest",
+    "titleKey": "space.rest"
+  },
+  {
+    "type": "asset",
+    "titleKey": "asset.real_estate.izmir",
+    "assetId": "real_estate_izmir",
+    "family": "real_estate",
+    "price": 540,
+    "baseIncome": 39,
+    "rent": 16,
+    "upgradeCosts": [
+      340,
+      540
+    ]
+  },
+  {
+    "type": "event",
+    "titleKey": "space.event"
+  },
+  {
+    "type": "asset",
+    "titleKey": "asset.transport.lagos",
+    "assetId": "transport_lagos",
+    "family": "transport",
+    "price": 600,
+    "baseIncome": 44,
+    "rent": 18,
+    "upgradeCosts": [
+      380,
+      600
+    ]
+  },
+  {
+    "type": "opportunity",
+    "titleKey": "space.opportunity"
+  },
+  {
+    "type": "asset",
+    "titleKey": "asset.transport.mumbai",
+    "assetId": "transport_mumbai",
+    "family": "transport",
+    "price": 660,
+    "baseIncome": 49,
+    "rent": 20,
+    "upgradeCosts": [
+      420,
+      660
+    ]
+  },
+  {
+    "type": "tax",
+    "titleKey": "space.tax",
+    "amount": 130
+  },
+  {
+    "type": "asset",
+    "titleKey": "asset.energy.reykjavik",
+    "assetId": "energy_reykjavik",
+    "family": "energy",
+    "price": 720,
+    "baseIncome": 54,
+    "rent": 22,
+    "upgradeCosts": [
+      460,
+      720
+    ]
+  },
+  {
+    "type": "circle",
+    "titleKey": "space.circle"
+  },
+  {
+    "type": "asset",
+    "titleKey": "asset.energy.merida",
+    "assetId": "energy_merida",
+    "family": "energy",
+    "price": 780,
+    "baseIncome": 59,
+    "rent": 23,
+    "upgradeCosts": [
+      500,
+      780
+    ]
+  },
+  {
+    "type": "bank",
+    "titleKey": "space.bank"
+  },
+  {
+    "type": "asset",
+    "titleKey": "asset.technology.tallinn",
+    "assetId": "technology_tallinn",
+    "family": "technology",
+    "price": 840,
+    "baseIncome": 64,
+    "rent": 26,
+    "upgradeCosts": [
+      540,
+      840
+    ]
+  },
+  {
+    "type": "event",
+    "titleKey": "space.event"
+  },
+  {
+    "type": "asset",
+    "titleKey": "asset.technology.kigali",
+    "assetId": "technology_kigali",
+    "family": "technology",
+    "price": 900,
+    "baseIncome": 69,
+    "rent": 28,
+    "upgradeCosts": [
+      580,
+      900
+    ]
+  },
+  {
+    "type": "opportunity",
+    "titleKey": "space.opportunity"
+  },
+  {
+    "type": "asset",
+    "titleKey": "asset.trade.medellin",
+    "assetId": "trade_medellin",
+    "family": "trade",
+    "price": 960,
+    "baseIncome": 75,
+    "rent": 30,
+    "upgradeCosts": [
+      620,
+      960
+    ]
+  },
+  {
+    "type": "event",
+    "titleKey": "space.event"
+  },
+  {
+    "type": "asset",
+    "titleKey": "asset.agriculture.kananga",
+    "assetId": "agriculture_kananga",
+    "family": "agriculture",
+    "price": 1020,
+    "baseIncome": 81,
+    "rent": 32,
+    "upgradeCosts": [
+      660,
+      1020
+    ]
+  },
+  {
+    "type": "asset",
+    "titleKey": "asset.real_estate.tbilisi",
+    "assetId": "real_estate_tbilisi",
+    "family": "real_estate",
+    "price": 1080,
+    "baseIncome": 86,
+    "rent": 34,
+    "upgradeCosts": [
+      700,
+      1080
+    ]
+  },
+  {
+    "type": "asset",
+    "titleKey": "asset.transport.kyoto",
+    "assetId": "transport_kyoto",
+    "family": "transport",
+    "price": 1140,
+    "baseIncome": 92,
+    "rent": 37,
+    "upgradeCosts": [
+      740,
+      1140
+    ]
+  },
+  {
+    "type": "asset",
+    "titleKey": "asset.energy.windhoek",
+    "assetId": "energy_windhoek",
+    "family": "energy",
+    "price": 1200,
+    "baseIncome": 97,
+    "rent": 39,
+    "upgradeCosts": [
+      780,
+      1200
+    ]
+  },
+  {
+    "type": "asset",
+    "titleKey": "asset.technology.toronto",
+    "assetId": "technology_toronto",
+    "family": "technology",
+    "price": 1260,
+    "baseIncome": 103,
+    "rent": 41,
+    "upgradeCosts": [
+      820,
+      1260
+    ]
+  },
+  {
+    "type": "asset",
+    "titleKey": "asset.trade.sarajevo",
+    "assetId": "trade_sarajevo",
+    "family": "trade",
+    "price": 1320,
+    "baseIncome": 109,
+    "rent": 43,
+    "upgradeCosts": [
+      860,
+      1320
+    ]
+  },
+  {
+    "type": "asset",
+    "titleKey": "asset.agriculture.antananarivo",
+    "assetId": "agriculture_antananarivo",
+    "family": "agriculture",
+    "price": 1380,
+    "baseIncome": 114,
+    "rent": 46,
+    "upgradeCosts": [
+      900,
+      1380
+    ]
+  },
+  {
+    "type": "asset",
+    "titleKey": "asset.real_estate.porto",
+    "assetId": "real_estate_porto",
+    "family": "real_estate",
+    "price": 1440,
+    "baseIncome": 120,
+    "rent": 48,
+    "upgradeCosts": [
+      940,
+      1440
+    ]
+  },
+  {
+    "type": "asset",
+    "titleKey": "asset.transport.santiago",
+    "assetId": "transport_santiago",
+    "family": "transport",
+    "price": 1500,
+    "baseIncome": 125,
+    "rent": 50,
+    "upgradeCosts": [
+      980,
+      1500
+    ]
+  },
+  {
+    "type": "asset",
+    "titleKey": "asset.energy.oslo",
+    "assetId": "energy_oslo",
+    "family": "energy",
+    "price": 1560,
+    "baseIncome": 131,
+    "rent": 53,
+    "upgradeCosts": [
+      1020,
+      1560
+    ]
+  },
+  {
+    "type": "asset",
+    "titleKey": "asset.technology.seoul",
+    "assetId": "technology_seoul",
+    "family": "technology",
+    "price": 1620,
+    "baseIncome": 137,
+    "rent": 55,
+    "upgradeCosts": [
+      1060,
+      1620
+    ]
+  },
+  {
+    "type": "rest",
+    "titleKey": "space.rest"
+  }
 ]

@@ -15,6 +15,8 @@ export interface GameConfig {
   salaryReductionAfterTurns: number;
   salaryReduction: number;
   freedomTurns: number;
+  freedomTarget: number;
+  seatCashBonus: number;
   maxTurns: number;
   rentRatio: number;
   rentBaselineRatio: number;
