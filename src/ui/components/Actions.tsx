@@ -135,9 +135,11 @@ export function ActionBar({ model, disabled, status, spectator, assetCount, onAc
             animate={{ scale: 1, opacity: 1 }}
             disabled={disabled}
             onClick={() => onAct(primary.action)}
-            className="relative flex min-h-14 min-w-0 flex-1 items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gold px-5 font-semibold text-bg shadow-[0_12px_30px_-12px_rgba(240,168,50,0.85)] transition-colors hover:bg-gold2 disabled:opacity-50"
+            className="relative flex min-h-14 min-w-0 flex-1 items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gold px-3 font-semibold sm:px-5 text-bg shadow-[0_12px_30px_-12px_rgba(240,168,50,0.85)] transition-colors hover:bg-gold2 disabled:opacity-50"
           >
-            <ChoiceIcon icon={primary.icon} size={20} />
+            <span className={secondary.length > 0 ? "hidden min-[400px]:inline-flex" : "inline-flex"}>
+              <ChoiceIcon icon={primary.icon} size={20} />
+            </span>
             <span className="truncate">{primary.label}</span>
           </motion.button>
         )

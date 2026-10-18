@@ -89,7 +89,7 @@ export function Players({ state, names, ledger, onHistory, onGuide, compact = fa
                       aria-label={t("history.open", { name: names[index] ?? "" })}
                       className="-m-1 rounded-lg p-1 text-left hover:bg-bg/60"
                     >
-                      <CountUp value={player.cash} className={`font-mono text-xl font-semibold leading-none ${player.cash < 0 ? "text-red" : "text-gold2"}`} />
+                      <CountUp value={player.cash} className={`whitespace-nowrap font-mono text-xl font-semibold leading-none ${player.cash < 0 ? "text-red" : "text-gold2"}`} />
                     </button>
                     {onGuide && (
                       <button
