@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>FINE - Galerie de choix</title>
+<style>
+:root{--bg:#070e1f;--bg2:#0c1528;--bg3:#111d34;--text:#f5f0e8;--text2:#9ba8c4;--text3:#4e5f82;--gold:#f0a832;--gold2:#f7c060;--green:#22d98a;--border:#16233d;--border2:#1f3054}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+::selection{background:var(--gold);color:var(--bg)}
+a{color:var(--gold2)}
+header.top{position:sticky;top:0;z-index:20;background:rgba(7,14,31,.95);backdrop-filter:blur(6px);border-bottom:1px solid var(--border2);padding:10px 16px}
+.top h1{margin:0;font:italic 700 20px Georgia,"Times New Roman",serif;color:var(--gold)}
+.top nav{display:flex;gap:14px;flex-wrap:wrap;margin-top:4px;font-size:14px}
+.favbar{margin-top:8px;font-size:13px;color:var(--text2)}
+.favbar summary{cursor:pointer;color:var(--gold2);font-weight:600;min-height:28px}
+.favlist{margin:6px 0 0;padding:8px;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;max-height:34vh;overflow:auto}
+.favlist li{margin:2px 0 2px 18px}
+.btn{background:var(--bg3);color:var(--text);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer;min-height:36px}
+.btn:hover{border-color:var(--gold)}
+main{max-width:1400px;margin:0 auto;padding:16px}
+h2{font:italic 700 26px Georgia,serif;color:var(--gold);margin:32px 0 4px}
+.intro{color:var(--text2);font-size:14px;margin:0 0 14px}
+h3{font-size:15px;color:var(--gold2);margin:22px 0 8px;font-weight:600;letter-spacing:.02em}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.grid.m{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.card{position:relative;background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.card.on{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
+.pic{aspect-ratio:1;background:var(--bg2);border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.pic img{width:78%;height:78%;object-fit:contain}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.trio .pic img{width:92%;height:92%}
+.nm{font-weight:600;font-size:14px;overflow-wrap:anywhere;padding-right:34px}
+.lic{font-size:12px;color:var(--text2);overflow-wrap:anywhere}
+.lic b{color:var(--green);font-weight:600}
+.lic b.warn{color:var(--gold2)}
+.src{font-size:12px}
+.star{position:absolute;top:6px;right:6px;width:36px;height:36px;border-radius:50%;border:1px solid var(--border2);background:var(--bg2);color:var(--text3);font-size:20px;line-height:1;cursor:pointer}
+.star[aria-pressed=true]{color:var(--gold);border-color:var(--gold)}
+.seed{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--text2)}
+.seed input{flex:1;min-width:0;background:var(--bg);color:var(--text);border:1px solid var(--border2);border-radius:6px;padding:6px 8px;font:inherit;font-size:14px}
+.broken{font-size:11px;color:var(--text3);text-align:center;padding:8px}
+.credits{margin-top:36px;padding:14px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;font-size:13px;color:var(--text2)}
+.credits li{margin:4px 0}
+footer{padding:24px 16px 40px;text-align:center;color:var(--text3);font-size:12px}
+@media(max-width:420px){.grid{grid-template-columns:repeat(2,1fr)}.grid.m{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>FINE - Galerie de choix</h1>
+  <nav><a href="#mascottes">Mascottes</a><a href="#pions">Pions</a><a href="#coins">Coins du plateau</a><a href="#credits">Licences</a></nav>
+  <details class="favbar" id="favbar">
+    <summary id="favsum">Mes favoris (0)</summary>
+    <ul class="favlist" id="favlist"></ul>
+    <p style="margin:6px 0 0"><button class="btn" id="copyfav" type="button">Copier la liste</button> <button class="btn" id="clearfav" type="button">Tout effacer</button> <span id="copymsg"></span></p>
+  </details>
+</header>
+<main>
+  <section id="mascottes">
+    <h2>Mascottes</h2>
+    <p class="intro">Chaque style montre 3 variantes. Tape un mot dans « graine » pour en voir d'autres. Appuie sur l'étoile pour garder un style.</p>
+    <div class="grid m" id="gm"></div>
+  </section>
+  <section id="pions">
+    <h2>Pions</h2>
+    <p class="intro">Icônes via l'API Iconify. Les jeux monochromes sont teintés en blanc cassé pour la lecture.</p>
+    <div id="gp"></div>
+  </section>
+  <section id="coins">
+    <h2>Illustrations de coins</h2>
+    <p class="intro">Candidats pour Départ, Banque/Coffre, Tribunal/Audit, Repos et Cercle.</p>
+    <div id="gc"></div>
+  </section>
+  <section class="credits" id="credits">
+    <strong>Attributions et licences</strong>
+    <ul>
+      <li>DiceBear (code MIT, <a href="https://www.dicebear.com/licenses/" rel="noopener">licences des styles</a>). Les styles CC BY 4.0 exigent un crédit visible à l'artiste, un lien vers la licence et la mention des modifications. Pour la production, installer @dicebear/core (MIT) plutôt que de dépendre de l'API hébergée.</li>
+      <li>Game-icons.net : CC BY 3.0, crédit obligatoire aux auteurs (<a href="https://game-icons.net/about.html" rel="noopener">game-icons.net</a>).</li>
+      <li>OpenMoji : CC BY-SA 4.0, crédit obligatoire et partage à l'identique pour les dérivés.</li>
+      <li>Noto Emoji (Google) : Apache 2.0. Fluent Emoji Flat (Microsoft) : MIT. Material Design Icons : Apache 2.0. Phosphor et Tabler : MIT. Lucide : ISC. Twemoji et Streamline : CC BY 4.0. Source des licences : <a href="https://api.iconify.design/collections" rel="noopener">API Iconify</a>.</li>
+      <li>Cette page est un outil de choix interne : aucun cookie, aucun traceur, favoris stockés uniquement dans ce navigateur.</li>
+    </ul>
+  </section>
+</main>
+<footer>FINE Game - SDC</footer>
+<script>
+(function(){
+var KEY='fine-galerie-favs';
+function load(){try{var v=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(v)?v:[]}catch(e){return []}}
+function save(a){try{localStorage.setItem(KEY,JSON.stringify(a))}catch(e){}}
+var mem=load();
+var favs=mem;
+function el(t,c,h){var e=document.createElement(t);if(c)e.className=c;if(h!=null)e.textContent=h;return e}
+function isFav(id){for(var i=0;i<favs.length;i++)if(favs[i].id===id)return true;return false}
+function toggle(id,label){var k=-1;for(var i=0;i<favs.length;i++)if(favs[i].id===id)k=i;if(k>=0)favs.splice(k,1);else favs.push({id:id,label:label});save(favs);render()}
+function render(){
+  document.getElementById('favsum').textContent='Mes favoris ('+favs.length+')';
+  var ul=document.getElementById('favlist');ul.textContent='';
+  if(!favs.length){var li=el('li',null,'Aucun favori pour le moment.');li.style.listStyle='none';li.style.marginLeft='0';ul.appendChild(li)}
+  favs.forEach(function(f){ul.appendChild(el('li',null,f.label))});
+  var cards=document.querySelectorAll('.card[data-id]');
+  for(var i=0;i<cards.length;i++){var c=cards[i],on=isFav(c.dataset.id);c.classList.toggle('on',on);c.querySelector('.star').setAttribute('aria-pressed',on?'true':'false')}
+}
+function star(card,id,label){
+  card.dataset.id=id;
+  var b=el('button','star','★');b.type='button';b.setAttribute('aria-label','J’aime : '+label);b.setAttribute('aria-pressed','false');
+  b.addEventListener('click',function(){toggle(id,label)});card.appendChild(b)
+}
+function img(src,alt){
+  var box=el('div','pic');var im=new Image();im.alt=alt;im.loading='lazy';im.decoding='async';
+  im.addEventListener('error',function(){box.textContent='';box.appendChild(el('div','broken','Image indisponible'))});
+  im.src=src;box.appendChild(im);return box
+}
+function lic(text,ok){var d=el('div','lic');d.appendChild(document.createTextNode('Licence : '));var b=el('b',ok===false?'warn':null,text);d.appendChild(b);return d}
+function link(href,text){var a=el('a','src',text);a.href=href;a.target='_blank';a.rel='noopener';return a}
+
+/* ---------- Mascottes ---------- */
+var D='https://api.dicebear.com/9.x/';
+var STY=[
+['lorelei','Lorelei','CC0 1.0','Lisa Wischofsky',1],
+['notionists','Notionists','CC0 1.0','Zoish',1],
+['open-peeps','Open Peeps','CC0 1.0','Pablo Stanley',1],
+['thumbs','Thumbs','CC0 1.0','DiceBear',1],
+['pixel-art','Pixel Art','CC0 1.0','DiceBear',1],
+['critters','Critters','CC0 1.0','DiceBear',1,'10.x'],
+['clay','Clay','CC0 1.0','DiceBear',1,'10.x'],
+['sprouts','Sprouts','CC0 1.0','DiceBear',1,'10.x'],
+['fun-emoji','Fun Emoji','CC BY 4.0','Davis Uche',0],
+['adventurer','Adventurer','CC BY 4.0','Lisa Wischofsky',0],
+['micah','Micah','CC BY 4.0','Micah Lanier',0],
+['big-ears','Big Ears','CC BY 4.0','The Visual Team',0],
+['big-smile','Big Smile','CC BY 4.0','Ashley Seo',0],
+['croodles','Croodles','CC BY 4.0','vijay verma',0],
+['toon-head','Toon Head','CC BY 4.0','Johan Melin',0],
+['dylan','Dylan','CC BY 4.0','Natalia Spivak',0],
+['miniavs','Miniavs','CC BY 4.0','Webpixels',0],
+['personas','Personas','CC BY 4.0','Draftbit',0],
+['bottts','Bottts','Gratuit perso et commercial (Pablo Stanley)','Pablo Stanley',2],
+['avataaars','Avataaars','Gratuit perso et commercial (Pablo Stanley)','Pablo Stanley',2]
+];
+var gm=document.getElementById('gm');
+STY.forEach(function(s){
+  var card=el('div','card');
+  var t=el('div','nm',s[1]);card.appendChild(t);
+  var trio=el('div','trio');card.appendChild(trio);
+  var seeds=['Pièce','Steve','Akwaba'];
+  function draw(base){trio.textContent='';[base,base+' 2',base+' 3'].forEach(function(sd){trio.appendChild(img('https://api.dicebear.com/'+(s[5]||'9.x')+'/'+s[0]+'/svg?seed='+encodeURIComponent(sd),s[1]+' '+sd))})}
+  draw(seeds[0]);
+  var l=lic(s[2],s[4]!==2);card.appendChild(l);
+  card.appendChild(el('div','lic','Auteur : '+s[3]+(s[4]===0?' - crédit obligatoire':'')));
+  var row=el('label','seed');row.appendChild(document.createTextNode('Graine'));
+  var inp=document.createElement('input');inp.type='text';inp.value=seeds[0];inp.maxLength=40;inp.setAttribute('aria-label','Graine pour '+s[1]);
+  var tm;inp.addEventListener('input',function(){clearTimeout(tm);tm=setTimeout(function(){draw(inp.value||'x')},350)});
+  row.appendChild(inp);card.appendChild(row);
+  card.appendChild(link('https://www.dicebear.com/styles/'+s[0]+'/','Source : dicebear.com/styles/'+s[0]));
+  star(card,'mascotte|'+s[0],'Mascotte - '+s[1]+' ('+s[2]+')');
+  gm.appendChild(card)
+});
+
+/* ---------- Icônes ---------- */
+var SETS={
+'game-icons':{n:'Game-icons.net',l:'CC BY 3.0',a:'Auteurs de game-icons.net (crédit obligatoire)',m:1,strict:0},
+'noto':{n:'Noto Emoji (Google)',l:'Apache 2.0',m:0},
+'openmoji':{n:'OpenMoji',l:'CC BY-SA 4.0',a:'HfG Schwäbisch Gmünd (crédit + partage identique)',m:0,strict:0},
+'fluent-emoji-flat':{n:'Fluent Emoji Flat (Microsoft)',l:'MIT',m:0},
+'mdi':{n:'Material Design Icons',l:'Apache 2.0',m:1},
+'ph':{n:'Phosphor',l:'MIT',m:1},
+'tabler':{n:'Tabler Icons',l:'MIT',m:1},
+'lucide':{n:'Lucide',l:'ISC',m:1}
+};
+var pending={};
+function icon(set,name,label){
+  var S=SETS[set];
+  var card=el('div','card');
+  var box=el('div','pic');box.appendChild(el('div','broken','Chargement...'));
+  card.appendChild(box);
+  (pending[set]=pending[set]||[]).push({name:name,box:box,label:label});
+  card.appendChild(el('div','nm',label));
+  var l=lic(S.l,!S.a);card.appendChild(l);
+  card.appendChild(el('div','lic',S.n+(S.a?' - crédit obligatoire':'')));
+  card.appendChild(link('https://icon-sets.iconify.design/'+set+'/'+name+'/','Source : '+set+':'+name));
+  var dl=link('https://api.iconify.design/'+set+'/'+name+'.svg'+(S.m?'?color=%23f5f0e8':''),'SVG direct');dl.style.marginLeft='8px';card.lastChild.after(dl);
+  star(card,'icone|'+set+'|'+name,label+' ['+set+':'+name+']');
+  return card
+}
+function fail(items){items.forEach(function(it){it.box.textContent='';it.box.appendChild(el('div','broken','Image indisponible'))})}
+function wait(ms){return new Promise(function(r){setTimeout(r,ms)})}
+async function fetchSet(set,items,attempt){
+  var names=items.map(function(i){return i.name}).join(',');
+  try{
+    var r=await fetch('https://api.iconify.design/'+set+'.json?icons='+encodeURIComponent(names));
+    if(r.status===429&&attempt<5){await wait(4000*(attempt+1));return fetchSet(set,items,attempt+1)}
+    if(!r.ok)throw new Error(r.status);
+    var d=await r.json(),S=SETS[set];
+    items.forEach(function(it){
+      var ic=d.icons&&d.icons[it.name];
+      if(!ic){fail([it]);return}
+      var w=ic.width||d.width||16,h=ic.height||d.height||16,body=ic.body;
+      if(S.m)body=body.replace(/currentColor/g,'#f5f0e8');
+      var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+w+' '+h+'" width="'+w+'" height="'+h+'">'+body+'</svg>';
+      var im=new Image();im.alt=it.label;
+      im.addEventListener('error',function(){fail([it])});
+      im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+      it.box.textContent='';it.box.appendChild(im)
+    })
+  }catch(e){if(attempt<2){await wait(3000);return fetchSet(set,items,attempt+1)}fail(items)}
+}
+async function loadAll(){for(var set in pending){await fetchSet(set,pending[set],0);await wait(600)}}
+function group(root,title,items){
+  root.appendChild(el('h3',null,title));
+  var g=el('div','grid');
+  items.forEach(function(it){g.appendChild(icon(it[0],it[1],it[2]))});
+  root.appendChild(g)
+}
+var gp=document.getElementById('gp');
+group(gp,'Game-icons.net - silhouettes de jeu (CC BY 3.0)',[
+['game-icons','top-hat','Chapeau haut-de-forme'],['game-icons','sailboat','Voilier'],['game-icons','ship-bow','Navire'],['game-icons','cargo-ship','Cargo'],
+['game-icons','steam-locomotive','Locomotive à vapeur'],['game-icons','old-wagon','Chariot'],['game-icons','biplane','Biplan'],['game-icons','rocket','Fusée'],
+['game-icons','cat','Chat'],['game-icons','wolf-head','Loup'],['game-icons','elephant','Éléphant'],['game-icons','rooster','Coq'],
+['game-icons','camel-head','Chameau'],['game-icons','horse-head','Cheval'],['game-icons','wheelbarrow','Brouette'],['game-icons','anvil','Enclume'],
+['game-icons','coins','Pièces'],['game-icons','dice-six-faces-five','Dé (5)'],['game-icons','meeple','Meeple'],['game-icons','goat','Chèvre']
+]);
+group(gp,'Noto Emoji - couleur (Apache 2.0)',[
+['noto','automobile','Voiture'],['noto','racing-car','Voiture de course'],['noto','sailboat','Voilier'],['noto','locomotive','Locomotive'],
+['noto','tractor','Tracteur'],['noto','bicycle','Vélo'],['noto','top-hat','Haut-de-forme'],['noto','dog-face','Chien'],
+['noto','cat-face','Chat'],['noto','elephant','Éléphant'],['noto','rocket','Fusée'],['noto','game-die','Dé'],
+['noto','coin','Pièce'],['noto','rooster','Coq'],['noto','camel','Chameau'],['noto','ox','Bœuf'],['noto','goat','Chèvre'],['noto','airplane','Avion']
+]);
+group(gp,'Fluent Emoji Flat - couleur, style doux (MIT)',[
+['fluent-emoji-flat','automobile','Voiture'],['fluent-emoji-flat','sailboat','Voilier'],['fluent-emoji-flat','locomotive','Locomotive'],['fluent-emoji-flat','tractor','Tracteur'],
+['fluent-emoji-flat','bicycle','Vélo'],['fluent-emoji-flat','top-hat','Haut-de-forme'],['fluent-emoji-flat','dog-face','Chien'],['fluent-emoji-flat','cat-face','Chat'],
+['fluent-emoji-flat','elephant','Éléphant'],['fluent-emoji-flat','rocket','Fusée'],['fluent-emoji-flat','game-die','Dé'],['fluent-emoji-flat','coin','Pièce'],
+['fluent-emoji-flat','rooster','Coq'],['fluent-emoji-flat','camel','Chameau'],['fluent-emoji-flat','lion','Lion'],['fluent-emoji-flat','penguin','Pingouin'],['fluent-emoji-flat','fox','Renard'],['fluent-emoji-flat','owl','Chouette']
+]);
+group(gp,'OpenMoji - contour net (CC BY-SA 4.0, partage identique)',[
+['openmoji','automobile','Voiture'],['openmoji','sailboat','Voilier'],['openmoji','locomotive','Locomotive'],['openmoji','tractor','Tracteur'],
+['openmoji','bicycle','Vélo'],['openmoji','top-hat','Haut-de-forme'],['openmoji','dog-face','Chien'],['openmoji','cat-face','Chat'],
+['openmoji','elephant','Éléphant'],['openmoji','rocket','Fusée'],['openmoji','game-die','Dé'],['openmoji','rooster','Coq'],['openmoji','camel','Chameau'],['openmoji','lion','Lion']
+]);
+group(gp,'Icônes linéaires (MIT / Apache / ISC) - sobres, teintées',[
+['ph','car-profile','Voiture (Phosphor)'],['ph','boat','Bateau (Phosphor)'],['ph','train','Train (Phosphor)'],['ph','tractor','Tracteur (Phosphor)'],
+['ph','bicycle','Vélo (Phosphor)'],['ph','dice-five','Dé (Phosphor)'],['ph','dog','Chien (Phosphor)'],['ph','cat','Chat (Phosphor)'],
+['tabler','car','Voiture (Tabler)'],['tabler','sailboat','Voilier (Tabler)'],['tabler','tractor','Tracteur (Tabler)'],['tabler','horse','Cheval (Tabler)'],
+['mdi','car-sports','Voiture sport (MDI)'],['mdi','hat-fedora','Chapeau (MDI)'],['mdi','tractor','Tracteur (MDI)'],['mdi','chess-pawn','Pion d’échecs (MDI)'],
+['lucide','tractor','Tracteur (Lucide)'],['lucide','sailboat','Voilier (Lucide)'],['lucide','bike','Vélo (Lucide)'],['lucide','rocket','Fusée (Lucide)']
+]);
+
+var gc=document.getElementById('gc');
+group(gc,'Départ / salaire',[
+['game-icons','finish-line','Ligne d’arrivée'],['game-icons','receive-money','Recevoir de l’argent'],['game-icons','cash','Billets'],['ph','flag-checkered','Drapeau à damier'],['mdi','flag-checkered','Drapeau à damier (MDI)'],['noto','sunrise','Lever de soleil'],['ph','hand-coins','Main et pièces']
+]);
+group(gc,'Banque / coffre',[
+['game-icons','bank','Banque'],['game-icons','piggy-bank','Tirelire'],['game-icons','gold-bar','Lingot'],['game-icons','chest','Coffre'],['game-icons','treasure-map','Carte au trésor'],['noto','bank','Banque (Noto)'],['noto','money-bag','Sac d’argent'],['fluent-emoji-flat','bank','Banque (Fluent)'],['ph','vault','Coffre-fort'],['tabler','vault','Coffre-fort (Tabler)'],['mdi','safe','Coffre (MDI)'],['tabler','building-bank','Bâtiment bancaire']
+]);
+group(gc,'Tribunal / audit / impôt',[
+['game-icons','gavel','Marteau de juge'],['game-icons','scales','Balance'],['game-icons','greek-temple','Temple grec'],['game-icons','police-badge','Badge'],['game-icons','prisoner','Prisonnier'],['noto','balance-scale','Balance (Noto)'],['fluent-emoji-flat','balance-scale','Balance (Fluent)'],['noto','police-car-light','Gyrophare'],['tabler','receipt-tax','Reçu fiscal'],['ph','receipt','Reçu'],['ph','gavel','Marteau (Phosphor)'],['lucide','gavel','Marteau (Lucide)']
+]);
+group(gc,'Repos',[
+['game-icons','park-bench','Banc de parc'],['mdi','bench','Banc (MDI)'],['game-icons','campfire','Feu de camp'],['tabler','campfire','Feu de camp (Tabler)'],['noto','camping','Camping'],['fluent-emoji-flat','camping','Camping (Fluent)'],['noto','tent','Tente'],['ph','tent','Tente (Phosphor)'],['tabler','armchair','Fauteuil']
+]);
+group(gc,'Cercle / communauté',[
+['game-icons','three-friends','Trois amis'],['game-icons','team-idea','Équipe'],['game-icons','swap-bag','Échange'],['noto','busts-in-silhouette','Silhouettes'],['noto','people-hugging','Accolade'],['noto','handshake','Poignée de main'],['fluent-emoji-flat','handshake','Poignée de main (Fluent)'],['fluent-emoji-flat','busts-in-silhouette','Silhouettes (Fluent)'],['ph','users-three','Trois personnes'],['tabler','users-group','Groupe'],['mdi','account-group','Groupe (MDI)']
+]);
+
+loadAll();
+document.getElementById('copyfav').addEventListener('click',function(){
+  var txt=favs.map(function(f){return f.label}).join('\n'),m=document.getElementById('copymsg');
+  try{navigator.clipboard.writeText(txt).then(function(){m.textContent='Copié.'},function(){m.textContent='Copie impossible : sélectionne la liste.'})}catch(e){m.textContent='Copie impossible : sélectionne la liste.'}
+});
+document.getElementById('clearfav').addEventListener('click',function(){favs.length=0;save(favs);render()});
+render();
+})();
+</script>
+</body>
+</html>
