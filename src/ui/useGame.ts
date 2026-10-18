@@ -4,13 +4,23 @@ import { useReducedMotion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { applyAction, chooseBotAction, createGame } from "../engine";
 import type { Action, GameConfig, GameEvent, GameState } from "../engine";
+import { explainAction, openingStatement } from "../engine/ledger";
+import type { Explanation, LogEvent, MoneyMove, Statement } from "../engine/ledger";
 import { audio } from "./audio/engine";
 import { findCard } from "./text";
 import type { FinoMood } from "./components/Fino";
 
 export interface LogEntry {
   id: number;
-  event: GameEvent;
+  event: LogEvent;
+}
+
+export interface MoveRecord extends MoneyMove {
+  id: number;
+}
+
+export interface StatementRecord extends Statement {
+  id: number;
 }
 
 export interface Seat {
@@ -21,7 +31,7 @@ export interface Seat {
 
 export interface Notice {
   id: number;
-  event: GameEvent;
+  event: LogEvent;
   owner?: number;
 }
 
@@ -53,6 +63,7 @@ export interface Stage {
   coins: CoinFlight[];
   mood: FinoMood;
   focus: number | null;
+  statement: number | null;
 }
 
 interface Saved {
@@ -60,11 +71,15 @@ interface Saved {
   names: string[];
   log: LogEntry[];
   nextId: number;
+  ledger?: MoveRecord[];
+  statements?: StatementRecord[];
 }
 
 const saveKey = "fine.save.v1";
 const logLimit = 80;
-const emptyStage: Stage = { dice: null, hop: null, pulse: null, banner: null, card: null, notices: [], coins: [], mood: "idle", focus: null };
+const ledgerLimit = 300;
+const statementLimit = 40;
+const emptyStage: Stage = { dice: null, hop: null, pulse: null, banner: null, card: null, notices: [], coins: [], mood: "idle", focus: null, statement: null };
 const normalTiming = { dice: 1150, settle: 320, hop: 235, land: 380, banner: 1350, after: 420, coin: 700, card: 4400, bot: 1200 };
 const reducedTiming = { dice: 450, settle: 120, hop: 110, land: 200, banner: 900, after: 250, coin: 300, card: 2600, bot: 600 };
 
@@ -82,6 +97,7 @@ const noticeTypes = new Set([
   "circle.joined",
   "circle.default",
   "circle.payout",
+  "circle.contribution",
   "player.restarted",
   "trade.completed"
 ]);
@@ -118,6 +134,8 @@ export function useGame() {
   const [thinking, setThinking] = useState(false);
   const [names, setNames] = useState<string[]>([]);
   const [log, setLog] = useState<LogEntry[]>([]);
+  const [ledger, setLedger] = useState<MoveRecord[]>([]);
+  const [statements, setStatements] = useState<StatementRecord[]>([]);
   const [hasSave, setHasSave] = useState(false);
   const nextId = useRef(1);
   const truthRef = useRef<GameState | null>(null);
@@ -145,7 +163,7 @@ export function useGame() {
     if (mood !== "idle" && hold > 0) moodTimer.current = window.setTimeout(() => patch({ mood: "idle" }), hold);
   }, [patch]);
 
-  const notify = useCallback((event: GameEvent, owner?: number) => {
+  const notify = useCallback((event: LogEvent, owner?: number) => {
     const notice: Notice = { id: nextId.current++, event, ...(owner === undefined ? {} : { owner }) };
     patch(previous => ({ notices: [...previous.notices, notice].slice(-3) }));
   }, [patch]);
@@ -155,19 +173,29 @@ export function useGame() {
     patch(previous => ({ coins: [...previous.coins, flight] }));
   }, [patch]);
 
-  const record = useCallback((events: GameEvent[]) => {
+  const record = useCallback((events: LogEvent[]) => {
     const entries = events.map(event => ({ id: nextId.current++, event }));
     setLog(previous => [...previous, ...entries].slice(-logLimit));
   }, []);
 
-  const present = useCallback(async (before: GameState, action: Action, after: GameState, events: GameEvent[], token: number) => {
+  const recordMoney = useCallback((explained: Pick<Explanation, "moves" | "statement">): number | null => {
+    const moves = explained.moves.map(move => ({ ...move, id: nextId.current++ }));
+    if (moves.length > 0) setLedger(previous => [...previous, ...moves].slice(-ledgerLimit));
+    if (!explained.statement) return null;
+    const statement: StatementRecord = { ...explained.statement, id: nextId.current++ };
+    setStatements(previous => [...previous, statement].slice(-statementLimit));
+    return statement.id;
+  }, []);
+
+  const present = useCallback(async (before: GameState, action: Action, after: GameState, events: GameEvent[], explained: Explanation, token: number) => {
     const alive = () => generation.current === token;
     const wait = (ms: number) => new Promise<void>(resolve => window.setTimeout(resolve, ms));
     const t = timing.current;
     const mover = before.currentPlayerIndex;
-    const reveal = () => {
+    const reveal = (): number | null => {
       setView(after);
-      record(events);
+      record(explained.logEvents);
+      return recordMoney(explained);
     };
     const ownerOf = (assetId?: string) => {
       const owned = after.ownedAssets.find(asset => asset.assetId === assetId);
@@ -175,7 +203,7 @@ export function useGame() {
     };
     const indexOf = (playerId?: string) => after.players.findIndex(player => player.id === playerId);
     const followUps = (skip: Set<string>) => {
-      for (const event of events) {
+      for (const event of explained.logEvents) {
         if (skip.has(event.type) || !noticeTypes.has(event.type)) continue;
         if (event.type === "player.restarted") {
           audio.play("restart");
@@ -271,19 +299,23 @@ export function useGame() {
     }
 
     if (action.type === "endTurn") {
-      reveal();
-      followUps(new Set(["turn.income", "turn.expenses"]));
+      patch({ statement: null });
+      const statementId = reveal();
+      followUps(new Set());
       if (after.phase === "finished") {
         setMood("celebrate", 0);
         return;
       }
       const next = after.currentPlayerIndex;
+      const nextIsBot = Boolean(after.players[next]?.isBot);
+      const summary = explained.logEvents.find(event => event.type === "turn.statement");
+      if (summary && nextIsBot) notify(summary);
       setMood("idle");
       patch({ banner: { player: next, key: nextId.current++ }, dice: null, focus: after.players[next]?.position ?? null, pulse: null });
       audio.play("turn");
       await wait(t.banner);
       if (!alive()) return;
-      patch({ banner: null });
+      patch({ banner: null, ...(statementId !== null && !nextIsBot ? { statement: statementId } : {}) });
       return;
     }
 
@@ -315,7 +347,7 @@ export function useGame() {
     if (main && noticeTypes.has(main.type)) notify(main);
     followUps(new Set(main ? [main.type] : []));
     await wait(t.after);
-  }, [flyCoins, notify, patch, record, setMood]);
+  }, [flyCoins, notify, patch, record, recordMoney, setMood]);
 
   const act = useCallback(async (action: Action) => {
     const current = truthRef.current;
@@ -326,14 +358,16 @@ export function useGame() {
     } catch {
       return;
     }
+    const explained = explainAction(current, action, result.state, result.events);
     truthRef.current = result.state;
     busyRef.current = true;
     setThinking(false);
     setBusy(true);
     setTruth(result.state);
+    if (action.type === "roll") patch({ statement: null });
     const token = generation.current;
     try {
-      await present(current, action, result.state, result.events, token);
+      await present(current, action, result.state, result.events, explained, token);
     } finally {
       if (generation.current === token) {
         setView(result.state);
@@ -341,7 +375,7 @@ export function useGame() {
         setBusy(false);
       }
     }
-  }, [present]);
+  }, [patch, present]);
 
   const reset = useCallback(() => {
     generation.current += 1;
@@ -353,15 +387,18 @@ export function useGame() {
     window.clearTimeout(moodTimer.current);
   }, []);
 
-  const open = useCallback((game: GameState, gameNames: string[], gameLog: LogEntry[]) => {
+  const open = useCallback((game: GameState, gameNames: string[], saved: { log: LogEntry[]; ledger: MoveRecord[]; statements: StatementRecord[] }, opening: StatementRecord | null) => {
     reset();
     audio.unlock();
     setNames(gameNames);
-    setLog(gameLog);
+    setLog(saved.log);
+    setLedger(saved.ledger);
+    setStatements(opening ? [...saved.statements, opening] : saved.statements);
     truthRef.current = game;
     setTruth(game);
     setView(game);
     const current = game.currentPlayerIndex;
+    const showOpening = opening !== null && !game.players[current]?.isBot;
     setStage({ ...emptyStage, banner: { player: current, key: nextId.current++ }, focus: game.players[current]?.position ?? 0 });
     audio.play("turn");
     const token = generation.current;
@@ -369,7 +406,7 @@ export function useGame() {
     setBusy(true);
     window.setTimeout(() => {
       if (generation.current !== token) return;
-      setStage(previous => ({ ...previous, banner: null }));
+      setStage(previous => ({ ...previous, banner: null, statement: showOpening ? opening.id : null }));
       busyRef.current = false;
       setBusy(false);
     }, timing.current.banner);
@@ -384,14 +421,17 @@ export function useGame() {
       botLevels: seats.map(seat => seat.botLevel)
     }, seed);
     nextId.current = 1;
-    open(game, seats.map(seat => seat.name), []);
+    const first = openingStatement(game);
+    const moves = first.moves.map(move => ({ ...move, id: nextId.current++ }));
+    const opening: StatementRecord = { ...first.statement, id: nextId.current++ };
+    open(game, seats.map(seat => seat.name), { log: [], ledger: moves, statements: [] }, opening);
   }, [open]);
 
   const resume = useCallback(() => {
     const saved = readSave();
     if (!saved) return;
     nextId.current = saved.nextId;
-    open(saved.state, saved.names, saved.log);
+    open(saved.state, saved.names, { log: saved.log, ledger: saved.ledger ?? [], statements: saved.statements ?? [] }, null);
   }, [open]);
 
   const clear = useCallback(() => {
@@ -415,6 +455,7 @@ export function useGame() {
   }, [reset, clear]);
 
   const dismissCard = useCallback(() => cardResolver.current?.(), []);
+  const dismissStatement = useCallback(() => patch({ statement: null }), [patch]);
   const dismissNotice = useCallback((id: number) => patch(previous => ({ notices: previous.notices.filter(notice => notice.id !== id) })), [patch]);
   const removeCoins = useCallback((id: number) => patch(previous => ({ coins: previous.coins.filter(flight => flight.id !== id) })), [patch]);
 
@@ -424,8 +465,8 @@ export function useGame() {
       writeSave(null);
       return;
     }
-    writeSave({ state: truth, names, log, nextId: nextId.current });
-  }, [truth, names, log]);
+    writeSave({ state: truth, names, log, nextId: nextId.current, ledger, statements });
+  }, [truth, names, log, ledger, statements]);
 
   useEffect(() => {
     if (!truth || busy || truth.phase === "finished") return;
@@ -442,5 +483,5 @@ export function useGame() {
     return () => window.clearTimeout(timer);
   }, [truth, busy, act, reduced, setMood]);
 
-  return { truth, view, stage, busy, thinking, names, log, hasSave, start, resume, act, leave, discard, dismissCard, dismissNotice, removeCoins };
+  return { truth, view, stage, busy, thinking, names, log, ledger, statements, hasSave, start, resume, act, leave, discard, dismissCard, dismissStatement, dismissNotice, removeCoins };
 }

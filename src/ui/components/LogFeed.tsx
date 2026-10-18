@@ -1,26 +1,27 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import type { GameEvent, GameState } from "../../engine";
+import type { GameState } from "../../engine";
+import type { LogEvent } from "../../engine/ledger";
 import { playerColors } from "../theme";
 import { useText } from "../text";
 import type { LogEntry } from "../useGame";
 
 const hidden = new Set(["space.landed", "turn.income", "turn.expenses"]);
 
-function shown(event: GameEvent): boolean {
+function shown(event: LogEvent): boolean {
   if (hidden.has(event.type)) return false;
   if (event.type === "card.resolved") return true;
   return !event.type.startsWith("card.") && !event.type.startsWith("opportunity.");
 }
 
-export function LogFeed({ state, names, log, limit = 14 }: { state: GameState; names: string[]; log: LogEntry[]; limit?: number }) {
+export function LogFeed({ state, names, log, limit = 14, bare = false }: { state: GameState; names: string[]; log: LogEntry[]; limit?: number; bare?: boolean }) {
   const { t, eventText } = useText();
   const rows = log.filter(entry => shown(entry.event)).slice(-limit).reverse();
 
   return (
     <section aria-label={t("game.log")} className="flex h-full min-h-0 flex-col">
-      <h3 className="mb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-text3">{t("game.log")}</h3>
+      {!bare && <h3 className="mb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-text3">{t("game.log")}</h3>}
       <ul className="min-h-0 flex-1 space-y-1.5 overflow-y-auto pr-1 text-[13px] text-text2">
         <AnimatePresence initial={false}>
           {rows.map(entry => {

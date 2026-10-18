@@ -41,11 +41,14 @@ function Screens() {
             stage={game.stage}
             names={game.names}
             log={game.log}
+            ledger={game.ledger}
+            statements={game.statements}
             busy={game.busy}
             thinking={game.thinking}
             onAct={action => void game.act(action)}
             onLeave={game.leave}
             onDismissCard={game.dismissCard}
+            onDismissStatement={game.dismissStatement}
             onDismissNotice={game.dismissNotice}
             onCoinsDone={game.removeCoins}
           />

@@ -596,6 +596,114 @@ export function playerSummary(state: GameState, playerId: PlayerId): PlayerSumma
   };
 }
 
+export interface IncomeLine {
+  assetId: string;
+  level: 1 | 2 | 3;
+  baseIncome: number;
+  marketMultiplier: number;
+  familyBonusApplied: boolean;
+  amount: number;
+  exact: number;
+}
+
+export interface IncomeBreakdown {
+  lines: IncomeLine[];
+  total: number;
+}
+
+export interface LoanInterestLine {
+  principal: number;
+  rate: number;
+  amount: number;
+}
+
+export interface InsuranceLine {
+  type: InsuranceType;
+  amount: number;
+}
+
+export interface ExpenseBreakdown {
+  living: number;
+  restartSurcharge: number;
+  restartTurnsLeft: number;
+  interest: LoanInterestLine[];
+  insurance: InsuranceLine[];
+  total: number;
+}
+
+export interface SalaryPreview {
+  amount: number;
+  base: number;
+  reduction: number;
+  bonus: number;
+  bonusTurns: number;
+  reduced: boolean;
+  reducedAfterTurns: number;
+  turnsBeforeReduction: number;
+}
+
+function requirePlayer(state: GameState, playerId: PlayerId): PlayerState {
+  const player = state.players.find(item => item.id === playerId);
+  if (!player) throw new Error("Unknown player");
+  return player;
+}
+
+export function incomeBreakdown(state: GameState, playerId: PlayerId): IncomeBreakdown {
+  const player = requirePlayer(state, playerId);
+  const familyCounts = new Map<string, number>();
+  for (const owned of player.assets) {
+    const family = assetSpace(state, owned.assetId).family;
+    if (family) familyCounts.set(family, (familyCounts.get(family) ?? 0) + 1);
+  }
+  let running = 0;
+  let allotted = 0;
+  const lines = player.assets.map(owned => {
+    const space = assetSpace(state, owned.assetId);
+    const marketMultiplier = state.marketEffects.find(item => item.family === space.family)?.multiplier ?? 1;
+    const familyBonusApplied = Boolean(space.family && familyCounts.get(space.family) === 4);
+    const exact = (space.baseIncome ?? 0) * owned.level * marketMultiplier * (familyBonusApplied ? 1 + state.config.familyBonus : 1);
+    running += exact;
+    const amount = Math.floor(running) - allotted;
+    allotted += amount;
+    return { assetId: owned.assetId, level: owned.level, baseIncome: space.baseIncome ?? 0, marketMultiplier, familyBonusApplied, amount, exact };
+  });
+  return { lines, total: Math.floor(passiveIncome(state, player)) };
+}
+
+export function expenseBreakdown(state: GameState, playerId: PlayerId): ExpenseBreakdown {
+  const player = requirePlayer(state, playerId);
+  const surcharge = player.restartExpenseTurns > 0
+    ? Math.max(0, player.baseExpenses - Math.floor(player.baseExpenses / state.config.restartExpenseMultiplier + 1e-9))
+    : 0;
+  const interest = player.loans.map(loan => ({ principal: loan.principal, rate: loan.interestRate, amount: Math.ceil(loan.principal * loan.interestRate) }));
+  const insurance = player.insurance.map(type => ({ type, amount: state.config.insurancePremium }));
+  const total = player.baseExpenses + interest.reduce((sum, line) => sum + line.amount, 0) + insurance.length * state.config.insurancePremium;
+  return { living: player.baseExpenses - surcharge, restartSurcharge: surcharge, restartTurnsLeft: player.restartExpenseTurns, interest, insurance, total };
+}
+
+export function salaryPreview(state: GameState, playerId: PlayerId): SalaryPreview {
+  const player = requirePlayer(state, playerId);
+  const config = state.config;
+  const current = state.players[state.currentPlayerIndex]?.id === playerId;
+  const rollsThisTurn = current && state.phase === "roll";
+  const endsTurnFirst = current && state.phase === "actions";
+  const turnsPlayed = rollsThisTurn ? player.turnsPlayed : player.turnsPlayed + 1;
+  const bonusTurns = endsTurnFirst ? Math.max(0, player.salaryBonusTurns - 1) : player.salaryBonusTurns;
+  const bonus = endsTurnFirst && player.salaryBonusTurns <= 1 ? 0 : player.salaryBonus;
+  const reduced = turnsPlayed >= config.salaryReductionAfterTurns;
+  const amount = reduced ? Math.max(0, config.salary - config.salaryReduction + bonus) : config.salary + bonus;
+  return {
+    amount,
+    base: config.salary,
+    reduction: config.salaryReduction,
+    bonus,
+    bonusTurns,
+    reduced,
+    reducedAfterTurns: config.salaryReductionAfterTurns,
+    turnsBeforeReduction: Math.max(0, config.salaryReductionAfterTurns - turnsPlayed)
+  };
+}
+
 export function sellValue(state: GameState, owned: OwnedAsset): number {
   return Math.floor(assetValue(state, owned) * state.config.voluntarySaleRatio);
 }

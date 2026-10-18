@@ -30,17 +30,19 @@ const icons: Record<string, LucideIcon> = {
   "circle.joined": HandCoins,
   "circle.default": HandCoins,
   "circle.payout": HandCoins,
+  "circle.contribution": HandCoins,
+  "turn.statement": Receipt,
   "player.restarted": RotateCcw
 };
 
-const losses = new Set(["tax.paid", "rent.paid", "asset.forced_sale", "loan.defaulted", "circle.default", "player.restarted"]);
+const losses = new Set(["tax.paid", "rent.paid", "asset.forced_sale", "loan.defaulted", "circle.default", "circle.contribution", "player.restarted"]);
 
 function NoticeItem({ notice, state, names, onDismiss }: { notice: Notice; state: GameState; names: string[]; onDismiss: (id: number) => void }) {
   const { eventText } = useText();
   const text = eventText(notice.event, state, names, notice.owner);
   const playerIndex = state.players.findIndex(player => player.id === notice.event.playerId);
   const Icon = icons[notice.event.type] ?? Wallet;
-  const loss = losses.has(notice.event.type);
+  const loss = losses.has(notice.event.type) || (notice.event.type === "turn.statement" && (notice.event.amount ?? 0) < 0);
 
   useEffect(() => {
     const timer = window.setTimeout(() => onDismiss(notice.id), 3400);

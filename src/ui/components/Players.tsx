@@ -1,22 +1,26 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Bot, Landmark, ShieldCheck } from "lucide-react";
+import { Bot, CircleHelp, Landmark, ShieldCheck } from "lucide-react";
 import { playerSummary } from "../../engine";
 import type { GameState } from "../../engine";
 import { useI18n } from "../i18n";
 import { iconStroke } from "../icons";
 import { playerColors, withAlpha } from "../theme";
+import type { MoveRecord } from "../useGame";
 import { CountUp, DeltaFloats } from "./Money";
 import { PawnShape } from "./Pawn";
 
 interface Props {
   state: GameState;
   names: string[];
+  ledger: MoveRecord[];
+  onHistory: (index: number) => void;
+  onGuide?: (index: number) => void;
   compact?: boolean;
 }
 
-export function Players({ state, names, compact = false }: Props) {
+export function Players({ state, names, ledger, onHistory, onGuide, compact = false }: Props) {
   const { t, money } = useI18n();
 
   return (
@@ -40,20 +44,30 @@ export function Players({ state, names, compact = false }: Props) {
             animate={{ scale: active ? 1 : 0.985, opacity: active || !compact ? 1 : 0.82 }}
             transition={{ type: "spring", stiffness: 260, damping: 24 }}
           >
-            <DeltaFloats value={player.cash} />
+            <DeltaFloats
+              moves={ledger.filter(move => move.playerId === player.id)}
+              state={state}
+              names={names}
+              align={compact ? (index === 0 ? "start" : index === state.players.length - 1 ? "end" : "center") : "center"}
+            />
             {compact ? (
-              <div className="flex items-center gap-1.5 px-2 py-1.5">
+              <button
+                type="button"
+                onClick={() => onHistory(index)}
+                aria-label={t("history.open", { name: names[index] ?? "" })}
+                className="flex w-full items-center gap-1.5 rounded-xl px-2 py-1.5 text-left"
+              >
                 <span className="shrink-0">
                   <PawnShape index={index} size={15} />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-1">
                     <span className="truncate text-[11px] font-medium leading-tight text-text">{names[index]}</span>
-                    {player.isBot && <Bot size={11} strokeWidth={iconStroke} className="shrink-0 text-text3" aria-label={t("setup.bot")} />}
+                    {player.isBot && <Bot size={11} strokeWidth={iconStroke} className="shrink-0 text-text3" aria-hidden />}
                   </span>
                   <CountUp value={player.cash} className={`block font-mono text-[12px] font-semibold leading-tight ${player.cash < 0 ? "text-red" : "text-gold2"}`} />
                 </span>
-              </div>
+              </button>
             ) : (
               <div className="p-3">
                 <div className="flex items-center gap-2">
@@ -67,7 +81,26 @@ export function Players({ state, names, compact = false }: Props) {
                   )}
                 </div>
                 <div className="mt-2 flex items-end justify-between gap-2">
-                  <CountUp value={player.cash} className={`font-mono text-xl font-semibold leading-none ${player.cash < 0 ? "text-red" : "text-gold2"}`} />
+                  <span className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => onHistory(index)}
+                      aria-label={t("history.open", { name: names[index] ?? "" })}
+                      className="-m-1 rounded-lg p-1 text-left hover:bg-bg/60"
+                    >
+                      <CountUp value={player.cash} className={`font-mono text-xl font-semibold leading-none ${player.cash < 0 ? "text-red" : "text-gold2"}`} />
+                    </button>
+                    {onGuide && (
+                      <button
+                        type="button"
+                        onClick={() => onGuide(index)}
+                        aria-label={t("guide.open", { name: names[index] ?? "" })}
+                        className="flex h-7 w-7 items-center justify-center rounded-full border border-line2 text-text2 hover:border-gold hover:text-gold2"
+                      >
+                        <CircleHelp size={14} strokeWidth={iconStroke} aria-hidden />
+                      </button>
+                    )}
+                  </span>
                   <span className="flex items-center gap-1.5 text-text3">
                     {player.insurance.length > 0 && (
                       <span className="flex items-center gap-0.5 font-mono text-[10px]" title={t("game.section.insure")}>
