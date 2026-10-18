@@ -9,12 +9,14 @@ import { audio } from "../audio/engine";
 import { useI18n } from "../i18n";
 import { iconStroke } from "../icons";
 import { playerColors } from "../theme";
-import { Fino } from "./Fino";
-import { PawnShape } from "./Pawn";
+import { ArtIcon } from "../art";
+import { Fina } from "./Fina";
+import { PawnShape, PawnsProvider } from "./Pawn";
 
 interface Props {
   state: GameState;
   names: string[];
+  pawns: string[];
   onReplay: () => void;
   onHome: () => void;
 }
@@ -48,7 +50,7 @@ function Confetti() {
   );
 }
 
-export function ResultScreen({ state, names, onReplay, onHome }: Props) {
+export function ResultScreen({ state, names, pawns, onReplay, onHome }: Props) {
   const { t, money } = useI18n();
   const winnerIndex = state.players.findIndex(player => player.id === state.winner);
   const winnerName = names[winnerIndex] ?? "";
@@ -64,10 +66,14 @@ export function ResultScreen({ state, names, onReplay, onHome }: Props) {
   }, []);
 
   return (
+    <PawnsProvider pawns={pawns}>
     <main className="relative mx-auto flex min-h-dvh w-full max-w-5xl flex-col items-center justify-center gap-6 px-4 py-8 text-center lg:flex-row lg:gap-16 lg:text-left">
       <Confetti />
       <motion.div className="flex flex-col items-center lg:flex-1 lg:items-start" initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 120, damping: 12 }}>
-        <Fino mood="celebrate" size={150} label={t("fino.label")} />
+        <div className="flex items-end gap-3">
+          <Fina mood="celebrate" size={150} label={t("fina.label")} />
+          <ArtIcon name="game-icons:laurels-trophy" size={72} color="#f0a832" />
+        </div>
         <h1 className="mt-4 font-serif text-5xl font-black italic leading-none text-gold lg:text-7xl">{freedom ? t("result.freedomTitle") : t("result.limitTitle")}</h1>
         <p className="mt-3 flex items-center gap-2 text-lg text-text">
           {winnerIndex >= 0 && <PawnShape index={winnerIndex} size={18} />}
@@ -116,5 +122,6 @@ export function ResultScreen({ state, names, onReplay, onHome }: Props) {
         </div>
       </motion.section>
     </main>
+    </PawnsProvider>
   );
 }

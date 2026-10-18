@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Bot, Play, RotateCcw, User } from "lucide-react";
+import { Bot, Library, Play, RotateCcw, User } from "lucide-react";
 import { useState } from "react";
 import configs from "../../data/config.json";
 import type { GameConfig, GameMode } from "../../engine";
@@ -9,7 +9,9 @@ import { locales, useI18n, type Locale } from "../i18n";
 import { iconStroke } from "../icons";
 import { playerColors } from "../theme";
 import type { Seat } from "../useGame";
-import { Fino } from "./Fino";
+import { CreditsSheet } from "./CreditsSheet";
+import { Fina } from "./Fina";
+import { PawnPicker, completePawns } from "./PawnPicker";
 import { PawnShape } from "./Pawn";
 
 interface Props {
@@ -25,12 +27,14 @@ export function SetupScreen({ hasSave, onStart, onResume }: Props) {
   const { t, locale, setLocale } = useI18n();
   const [mode, setMode] = useState<GameMode>("standard");
   const [seats, setSeats] = useState<Seat[]>([
-    { name: "", isBot: false, botLevel: 2 },
-    { name: "", isBot: true, botLevel: 2 },
-    { name: "", isBot: true, botLevel: 2 },
-    { name: "", isBot: true, botLevel: 2 }
+    { name: "", isBot: false, botLevel: 2, pawn: "" },
+    { name: "", isBot: true, botLevel: 2, pawn: "" },
+    { name: "", isBot: true, botLevel: 2, pawn: "" },
+    { name: "", isBot: true, botLevel: 2, pawn: "" }
   ]);
   const [count, setCount] = useState(2);
+  const [picking, setPicking] = useState<Seat[] | null>(null);
+  const [creditsOpen, setCreditsOpen] = useState(false);
   const config = allConfigs[mode];
   const update = (index: number, patch: Partial<Seat>) => setSeats(previous => previous.map((seat, i) => (i === index ? { ...seat, ...patch } : seat)));
 
@@ -39,8 +43,13 @@ export function SetupScreen({ hasSave, onStart, onResume }: Props) {
       ...seat,
       name: seat.name.trim() || (seat.isBot ? `Robot ${index + 1}` : t("setup.player", { n: index + 1 }))
     }));
-    onStart(config, active);
+    if (active.some(seat => !seat.isBot)) setPicking(active);
+    else onStart(config, completePawns(active, active.map(() => null)));
   };
+
+  if (picking) {
+    return <PawnPicker seats={picking} onBack={() => setPicking(null)} onDone={done => onStart(config, done)} />;
+  }
 
   return (
     <main className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-[max(12px,env(safe-area-inset-top))] lg:flex-row lg:items-center lg:gap-16 lg:px-10">
@@ -60,10 +69,10 @@ export function SetupScreen({ hasSave, onStart, onResume }: Props) {
 
       <header className="flex flex-col items-center pt-8 text-center lg:flex-1 lg:items-start lg:pt-0 lg:text-left">
         <motion.div initial={{ scale: 0.6, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 160, damping: 14 }} className="lg:hidden">
-          <Fino size={84} mood="happy" label={t("fino.label")} />
+          <Fina size={96} mood="happy" label={t("fina.label")} />
         </motion.div>
         <motion.div initial={{ scale: 0.6, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 160, damping: 14 }} className="hidden lg:block">
-          <Fino size={180} mood="happy" label={t("fino.label")} />
+          <Fina size={200} mood="happy" label={t("fina.label")} />
         </motion.div>
         <motion.h1 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="mt-2 font-serif text-6xl font-black italic leading-none text-gold lg:mt-6 lg:text-[120px]">
           FINE
@@ -179,7 +188,16 @@ export function SetupScreen({ hasSave, onStart, onResume }: Props) {
           <Play size={20} strokeWidth={2.2} fill="currentColor" aria-hidden />
           {t("setup.start")}
         </motion.button>
+        <button
+          type="button"
+          onClick={() => setCreditsOpen(true)}
+          className="mx-auto flex min-h-11 items-center gap-1.5 rounded-xl px-3 font-mono text-[11px] uppercase tracking-[0.18em] text-text3 hover:text-gold2"
+        >
+          <Library size={14} strokeWidth={iconStroke} aria-hidden />
+          {t("credits.title")}
+        </button>
       </motion.section>
+      <CreditsSheet open={creditsOpen} onClose={() => setCreditsOpen(false)} />
     </main>
   );
 }

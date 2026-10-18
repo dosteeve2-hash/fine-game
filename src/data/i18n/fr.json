@@ -156,5 +156,7 @@
   "opportunity.solar_rebate.tip": "Certaines aides remboursent une partie d’un investissement qui fait déjà baisser les factures. Double gain.",
   "opportunity.new_client.tip": "Plus de clients, c’est aussi moins de dépendance à un seul acheteur : le revenu devient plus solide.",
   "opportunity.business_course.tip": "Savoir lire un budget ou une marge aide à prendre de meilleures décisions, et ça se voit sur les revenus.",
-  "opportunity.repair_voucher.tip": "Un bon de réduction n’est une économie que si la dépense était prévue. Cette fois, elle l’était."
+  "opportunity.repair_voucher.tip": "Un bon de réduction n’est une économie que si la dépense était prévue. Cette fois, elle l’était.",
+  "space.audit": "Contrôle fiscal",
+  "space.audit_office": "Audit / Repos"
 }

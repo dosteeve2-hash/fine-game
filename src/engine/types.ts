@@ -2,7 +2,7 @@ export type PlayerId = string;
 export type GameMode = "quick" | "standard" | "long";
 export type Family = "trade" | "agriculture" | "real_estate" | "transport" | "energy" | "technology";
 export type InsuranceType = "property" | "health" | "harvest" | "breakdown";
-export type SpaceType = "start" | "asset" | "circle" | "event" | "opportunity" | "tax" | "bank" | "rest";
+export type SpaceType = "start" | "asset" | "circle" | "event" | "opportunity" | "tax" | "bank" | "rest" | "audit";
 
 export interface GameConfig {
   mode: GameMode;
@@ -36,6 +36,8 @@ export interface GameConfig {
   restartCash: number;
   restartExpenseTurns: number;
   restartExpenseMultiplier: number;
+  auditFee: number;
+  auditTurns: number;
 }
 
 export interface BoardSpace {
@@ -48,6 +50,7 @@ export interface BoardSpace {
   rent?: number;
   upgradeCosts?: [number, number];
   amount?: number;
+  office?: boolean;
 }
 
 export interface OwnedAsset {
@@ -78,6 +81,7 @@ export interface PlayerState {
   salaryBonusTurns: number;
   salaryBonus: number;
   assetDiscount: number;
+  auditTurns: number;
 }
 
 export interface CircleState {
@@ -122,6 +126,8 @@ export type Action =
   | { type: "buyInsurance"; insuranceType: InsuranceType }
   | { type: "proposeTrade"; otherPlayerId: PlayerId; offeredAssetId?: string; requestedAssetId?: string; offeredCash: number; requestedCash: number; accepted: boolean }
   | { type: "joinCircle" }
+  | { type: "payAudit" }
+  | { type: "waitAudit" }
   | { type: "endTurn" };
 
 export interface GameEvent {

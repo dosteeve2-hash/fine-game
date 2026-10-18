@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Bot, CircleHelp, Landmark, ShieldCheck } from "lucide-react";
+import { Bot, CircleHelp, Gavel, Landmark, ShieldCheck } from "lucide-react";
 import { playerSummary } from "../../engine";
 import type { GameState } from "../../engine";
 import { useI18n } from "../i18n";
@@ -38,8 +38,8 @@ export function Players({ state, names, ledger, onHistory, onGuide, compact = fa
             layout
             className="relative rounded-xl border bg-bg3/90"
             style={{
-              borderColor: active ? color : "#1f3054",
-              boxShadow: active ? `0 0 0 1px ${color}, 0 8px 28px -10px ${withAlpha(color, 0.6)}` : "none"
+              borderColor: active ? "#f0a832" : "#1f3054",
+              boxShadow: active ? `0 0 0 1px #f0a832, 0 0 26px -6px ${withAlpha("#f0a832", 0.75)}, inset 3px 0 0 ${color}` : `inset 3px 0 0 ${withAlpha(color, 0.7)}`
             }}
             animate={{ scale: active ? 1 : 0.985, opacity: active || !compact ? 1 : 0.82 }}
             transition={{ type: "spring", stiffness: 260, damping: 24 }}
@@ -64,6 +64,7 @@ export function Players({ state, names, ledger, onHistory, onGuide, compact = fa
                   <span className="flex items-center gap-1">
                     <span className="truncate text-[11px] font-medium leading-tight text-text">{names[index]}</span>
                     {player.isBot && <Bot size={11} strokeWidth={iconStroke} className="shrink-0 text-text3" aria-hidden />}
+                    {player.auditTurns > 0 && <Gavel size={11} strokeWidth={iconStroke} className="shrink-0 text-red" aria-label={t("audit.heldYou", { n: player.auditTurns })} />}
                   </span>
                   <CountUp value={player.cash} className={`block font-mono text-[12px] font-semibold leading-tight ${player.cash < 0 ? "text-red" : "text-gold2"}`} />
                 </span>
@@ -102,6 +103,12 @@ export function Players({ state, names, ledger, onHistory, onGuide, compact = fa
                     )}
                   </span>
                   <span className="flex items-center gap-1.5 text-text3">
+                    {player.auditTurns > 0 && (
+                      <span className="flex items-center gap-0.5 font-mono text-[10px] text-red" title={t("audit.heldYou", { n: player.auditTurns })}>
+                        <Gavel size={12} strokeWidth={iconStroke} aria-hidden />
+                        {player.auditTurns}
+                      </span>
+                    )}
                     {player.insurance.length > 0 && (
                       <span className="flex items-center gap-0.5 font-mono text-[10px]" title={t("game.section.insure")}>
                         <ShieldCheck size={12} strokeWidth={iconStroke} aria-hidden />

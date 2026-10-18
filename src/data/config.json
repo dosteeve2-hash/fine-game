@@ -27,7 +27,9 @@
     "restartExpenseTurns": 5,
     "restartExpenseMultiplier": 1.1,
     "freedomTarget": 500,
-    "seatCashBonus": 60
+    "seatCashBonus": 60,
+    "auditFee": 90,
+    "auditTurns": 2
   },
   "standard": {
     "mode": "standard",
@@ -57,7 +59,9 @@
     "restartExpenseTurns": 5,
     "restartExpenseMultiplier": 1.1,
     "freedomTarget": 1100,
-    "seatCashBonus": 60
+    "seatCashBonus": 60,
+    "auditFee": 120,
+    "auditTurns": 2
   },
   "long": {
     "mode": "long",
@@ -87,6 +91,8 @@
     "restartExpenseTurns": 5,
     "restartExpenseMultiplier": 1.1,
     "freedomTarget": 1500,
-    "seatCashBonus": 60
+    "seatCashBonus": 60,
+    "auditFee": 150,
+    "auditTurns": 2
   }
 }

@@ -156,5 +156,7 @@
   "opportunity.solar_rebate.tip": "Bazı destekler, zaten faturaları düşüren bir yatırımın bir kısmını geri öder. Çifte kazanç.",
   "opportunity.new_client.tip": "Daha fazla müşteri, tek bir alıcıya daha az bağımlılık demektir: gelir daha sağlam hale gelir.",
   "opportunity.business_course.tip": "Bir bütçeyi ya da kâr marjını okumayı bilmek daha iyi kararlar almayı sağlar; bu da gelire yansır.",
-  "opportunity.repair_voucher.tip": "İndirim kuponu ancak o harcamayı zaten yapacaksan tasarruftur. Bu sefer yapacaktın."
+  "opportunity.repair_voucher.tip": "İndirim kuponu ancak o harcamayı zaten yapacaksan tasarruftur. Bu sefer yapacaktın.",
+  "space.audit": "Vergi denetimi",
+  "space.audit_office": "Denetim / Dinlenme"
 }

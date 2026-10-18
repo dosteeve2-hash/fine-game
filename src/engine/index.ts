@@ -133,7 +133,8 @@ export function createGame(config: GameConfig, seed: number): GameState {
     restartExpenseTurns: 0,
     salaryBonusTurns: 0,
     salaryBonus: 0,
-    assetDiscount: 1
+    assetDiscount: 1,
+    auditTurns: 0
   }));
   const initial: GameState = {
     config: {
@@ -158,16 +159,19 @@ export function createGame(config: GameConfig, seed: number): GameState {
   return advanceStart(initial, 0).state;
 }
 
-export function legalActions(state: GameState): Action[] {
-  if (state.phase === "finished") return [];
-  const player = currentPlayer(state);
-  if (state.phase === "roll") return [{ type: "roll" }];
+export function auditOffice(spaces: BoardSpace[]): number {
+  const office = spaces.findIndex(space => space.office);
+  if (office >= 0) return office;
+  const rest = spaces.map(space => space.type).lastIndexOf("rest");
+  return rest >= 0 ? rest : 0;
+}
+
+export function isHeld(player: PlayerState): boolean {
+  return (player.auditTurns ?? 0) > 0;
+}
+
+function managementActions(state: GameState, player: PlayerState): Action[] {
   const actions: Action[] = [];
-  const position = player.position;
-  const space = state.spaces[position];
-  if (space?.type === "asset" && space.assetId && !state.ownedAssets.some(asset => asset.assetId === space.assetId) && player.cash >= Math.ceil((space.price ?? Infinity) * player.assetDiscount)) {
-    actions.push({ type: "buyAsset" });
-  }
   for (const owned of player.assets) {
     if (owned.level < 3) {
       const cost = (assetSpace(state, owned.assetId).upgradeCosts ?? [])[owned.level - 1];
@@ -182,6 +186,25 @@ export function legalActions(state: GameState): Action[] {
   for (const amount of [...new Set(player.loans.map(loan => Math.min(loan.principal, Math.floor(player.cash / state.config.loanTranche) * state.config.loanTranche)))]) {
     if (amount > 0) actions.push({ type: "repayLoan", amount });
   }
+  return actions;
+}
+
+export function legalActions(state: GameState): Action[] {
+  if (state.phase === "finished") return [];
+  const player = currentPlayer(state);
+  if (state.phase === "roll") {
+    const opening: Action[] = isHeld(player)
+      ? [...(player.cash >= state.config.auditFee ? [{ type: "payAudit" } as const] : []), { type: "waitAudit" }]
+      : [{ type: "roll" }];
+    return [...opening, ...managementActions(state, player)];
+  }
+  const actions: Action[] = [];
+  const position = player.position;
+  const space = state.spaces[position];
+  if (space?.type === "asset" && space.assetId && !state.ownedAssets.some(asset => asset.assetId === space.assetId) && player.cash >= Math.ceil((space.price ?? Infinity) * player.assetDiscount)) {
+    actions.push({ type: "buyAsset" });
+  }
+  actions.push(...managementActions(state, player));
   for (const insuranceType of insuranceTypes) {
     if (!player.insurance.includes(insuranceType) && player.cash >= state.config.insurancePremium) actions.push({ type: "buyInsurance", insuranceType });
   }
@@ -379,6 +402,10 @@ function applyActionInternal(state: GameState, action: Action): { state: GameSta
       const paid = space.amount ?? 0;
       updated = { ...updated, players: updated.players.map(item => item.id === player.id ? { ...item, cash: item.cash - paid } : item) };
       emitted.push({ type: "tax.paid", playerId: player.id, amount: paid });
+    } else if (space?.type === "audit") {
+      const office = auditOffice(state.spaces);
+      updated = { ...updated, pendingBank: false, players: updated.players.map(item => item.id === player.id ? { ...item, position: office, auditTurns: state.config.auditTurns } : item) };
+      emitted.push({ type: "audit.sent", playerId: player.id, amount: office });
     } else if (space?.type === "event" || space?.type === "opportunity") {
       const deck = space.type === "event" ? eventDeck : opportunities;
       const draw = random(updated);
@@ -395,7 +422,15 @@ function applyActionInternal(state: GameState, action: Action): { state: GameSta
 
   let updated: GameState = state;
   const events: GameEvent[] = [];
-  if (action.type === "buyAsset") {
+  if (action.type === "payAudit") {
+    updated = { ...state, players: state.players.map(item => item.id === player.id ? { ...item, cash: item.cash - state.config.auditFee, auditTurns: 0 } : item) };
+    events.push({ type: "audit.paid", playerId: player.id, amount: state.config.auditFee });
+  } else if (action.type === "waitAudit") {
+    const remaining = Math.max(0, player.auditTurns - 1);
+    updated = { ...state, phase: "actions", pendingBank: false, pendingOpportunity: false, players: state.players.map(item => item.id === player.id ? { ...item, auditTurns: remaining } : item) };
+    events.push({ type: "audit.waited", playerId: player.id, amount: remaining });
+    if (remaining === 0) events.push({ type: "audit.released", playerId: player.id });
+  } else if (action.type === "buyAsset") {
     const space = state.spaces[player.position];
     if (!space?.assetId) throw new Error("No asset on current space");
     const price = Math.ceil((space.price ?? 0) * player.assetDiscount);
@@ -530,7 +565,14 @@ export function getWinner(state: GameState): PlayerId | null {
 export function chooseBotAction(state: GameState, level: 1 | 2 | 3): Action {
   const player = currentPlayer(state);
   const actions = legalActions(state);
-  if (state.phase === "roll") return { type: "roll" };
+  if (state.phase === "roll") {
+    if (!isHeld(player)) return { type: "roll" };
+    const canPay = actions.some(action => action.type === "payAudit");
+    const cushion = state.config.baseExpenses * (level === 3 ? 3 : level === 2 ? 4 : 8);
+    const freeAssets = state.spaces.filter(space => space.type === "asset" && !state.ownedAssets.some(owned => owned.assetId === space.assetId)).length;
+    const worthLeaving = level < 3 || freeAssets >= 4;
+    return canPay && worthLeaving && player.cash - state.config.auditFee >= cushion ? { type: "payAudit" } : { type: "waitAudit" };
+  }
   const byType = (type: Action["type"]) => actions.filter(action => action.type === type);
   const upgradeReserve = level === 1 ? 14 : level === 2 ? 8 : 5;
   const upgrade = byType("upgradeAsset")[0];

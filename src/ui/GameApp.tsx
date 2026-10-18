@@ -27,6 +27,7 @@ function Screens() {
           <ResultScreen
             state={game.view}
             names={game.names}
+            pawns={game.pawns}
             onHome={game.discard}
             onReplay={() => {
               if (last.current) game.start(last.current.config, last.current.seats);
@@ -40,6 +41,7 @@ function Screens() {
             view={game.view}
             stage={game.stage}
             names={game.names}
+            pawns={game.pawns}
             log={game.log}
             ledger={game.ledger}
             statements={game.statements}
@@ -48,6 +50,7 @@ function Screens() {
             onAct={action => void game.act(action)}
             onLeave={game.leave}
             onDismissCard={game.dismissCard}
+            onDismissScene={game.dismissScene}
             onDismissStatement={game.dismissStatement}
             onDismissNotice={game.dismissNotice}
             onCoinsDone={game.removeCoins}

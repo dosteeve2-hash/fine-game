@@ -156,5 +156,7 @@
   "opportunity.solar_rebate.tip": "Some rebates refund part of an investment that already lowers your bills. A double win.",
   "opportunity.new_client.tip": "More customers also means less reliance on a single buyer: your income gets sturdier.",
   "opportunity.business_course.tip": "Knowing how to read a budget or a margin leads to better decisions, and it shows in your income.",
-  "opportunity.repair_voucher.tip": "A voucher is only a saving if you were going to spend the money anyway. This time, you were."
+  "opportunity.repair_voucher.tip": "A voucher is only a saving if you were going to spend the money anyway. This time, you were.",
+  "space.audit": "Tax audit",
+  "space.audit_office": "Audit / Rest"
 }

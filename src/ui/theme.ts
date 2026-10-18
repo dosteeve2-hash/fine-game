@@ -1,24 +1,33 @@
 import type { Family, SpaceType } from "../engine";
 
-export const playerColors = ["#f0a832", "#2dd4ff", "#22d98a", "#c4a1ff"] as const;
+export const palette = {
+  night: "#070e1f",
+  gold: "#f0a832",
+  ivory: "#f5f0e8",
+  gain: "#3cc48e",
+  loss: "#e2706b"
+} as const;
+
+export const playerColors = ["#f0a832", "#9fc2e0", "#5fc79f", "#d6977a"] as const;
 
 export const familyColors: Record<Family, string> = {
-  trade: "#f0a832",
-  agriculture: "#22d98a",
-  real_estate: "#a78bfa",
-  transport: "#2dd4ff",
-  energy: "#f97316",
-  technology: "#ec4899"
+  trade: "#c9a35c",
+  agriculture: "#82a66f",
+  real_estate: "#9b8bb4",
+  transport: "#6d9cb6",
+  energy: "#c58358",
+  technology: "#b07f95"
 };
 
 export const spaceColors: Record<Exclude<SpaceType, "asset">, string> = {
   start: "#f0a832",
-  event: "#f87171",
-  opportunity: "#22d98a",
-  tax: "#9ba8c4",
-  circle: "#2dd4ff",
-  bank: "#f7c060",
-  rest: "#8ea0c8"
+  event: "#d08a7c",
+  opportunity: "#6fbf98",
+  tax: "#a9b2c6",
+  circle: "#9fc2e0",
+  bank: "#e3be7a",
+  rest: "#a9b2c6",
+  audit: "#e2706b"
 };
 
 const cities: Record<string, string> = {
@@ -59,5 +68,5 @@ export function withAlpha(hex: string, alpha: number): string {
 
 export function accentFor(space: { type: SpaceType; family?: Family }): string {
   if (space.type === "asset" && space.family) return familyColors[space.family];
-  return spaceColors[space.type as Exclude<SpaceType, "asset">] ?? "#9ba8c4";
+  return spaceColors[space.type as Exclude<SpaceType, "asset">] ?? "#a9b2c6";
 }

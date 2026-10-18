@@ -1,30 +1,65 @@
-import { useId } from "react";
+"use client";
+
+import { createContext, useContext, useId, type ReactNode } from "react";
+import { art, isMono } from "../art";
+import { pawnDef } from "../art/pawns";
 import { playerColors } from "../theme";
 
-const outlines = [
-  "M12 2.2a5 5 0 0 1 3 9 4.6 4.6 0 0 1 2.2 1.6h-1.1c.9 2.6 2.2 6.2 3.7 9.4 1.4.5 2.2 1.3 2.2 2.3 0 1.7-4.5 3.3-10 3.3s-10-1.6-10-3.3c0-1 .8-1.8 2.2-2.3 1.5-3.2 2.8-6.8 3.7-9.4H6.8A4.6 4.6 0 0 1 9 11.2a5 5 0 0 1 3-9z",
-  "M5.5 3.5h3v2.4h2.3V3.5h2.4v2.4h2.3V3.5h3v6l-1.8 1.6.9 10.8c1.6.5 2.6 1.3 2.6 2.3 0 1.7-4.5 3.3-10.2 3.3S1.8 25.9 1.8 24.2c0-1 1-1.8 2.6-2.3l.9-10.8L5.5 9.5z",
-  "M12 1.8 19 9.6 12 17.4 5 9.6zM9.4 17.2h5.2l1.6 4.7c1.8.5 2.9 1.3 2.9 2.3 0 1.7-3.2 3.3-7.1 3.3s-7.1-1.6-7.1-3.3c0-1 1.1-1.8 2.9-2.3z",
-  "M12 2.4c3.6 0 6.4 2.7 6.4 6 0 2.1-1.1 3.9-2.8 5l2.6 8.4c1.5.5 2.4 1.3 2.4 2.3 0 1.7-4 3.3-8.6 3.3s-8.6-1.6-8.6-3.3c0-1 .9-1.8 2.4-2.3l2.6-8.4a5.9 5.9 0 0 1-2.8-5c0-3.3 2.8-6 6.4-6zm0 3.2a2.8 2.8 0 1 0 0 5.6 2.8 2.8 0 0 0 0-5.6z"
-] as const;
+const PawnsContext = createContext<readonly string[]>([]);
 
-export function PawnShape({ index, size = 28, active = false }: { index: number; size?: number; active?: boolean }) {
+export function PawnsProvider({ pawns, children }: { pawns: readonly string[]; children: ReactNode }) {
+  return <PawnsContext.Provider value={pawns}>{children}</PawnsContext.Provider>;
+}
+
+export function usePawns(): readonly string[] {
+  return useContext(PawnsContext);
+}
+
+function mix(hex: string, target: number, amount: number): string {
+  const value = Number.parseInt(hex.slice(1, 7), 16);
+  const channel = (shift: number) => Math.round(((value >> shift) & 255) * (1 - amount) + target * amount);
+  return `rgb(${channel(16)}, ${channel(8)}, ${channel(0)})`;
+}
+
+interface Props {
+  index: number;
+  size?: number;
+  active?: boolean;
+  pawn?: string;
+  color?: string;
+}
+
+export function PawnShape({ index, size = 28, active = false, pawn, color: forced }: Props) {
+  const chosen = usePawns();
   const id = useId().replace(/:/g, "");
-  const color = playerColors[index % playerColors.length] ?? "#f0a832";
-  const path = outlines[index % outlines.length] ?? outlines[0];
+  const color = forced ?? playerColors[index % playerColors.length] ?? "#f0a832";
+  const def = pawnDef(pawn ?? chosen[index], index);
+  const icon = art[def.art];
+  const mono = isMono(def.art);
+  const body = mono
+    ? icon.body.replaceAll('fill="currentColor"', `fill="url(#metal-${id})" stroke="#0a1222" stroke-width="${icon.width * 0.035}" stroke-linejoin="round" paint-order="stroke"`)
+    : icon.body;
+
   return (
-    <svg viewBox="0 0 24 30" width={size} height={size * 1.25} aria-hidden style={{ overflow: "visible" }}>
+    <svg viewBox="0 0 24 30" width={size} height={size * 1.25} aria-hidden focusable="false" style={{ overflow: "visible" }}>
       <defs>
-        <linearGradient id={`pawn-${id}`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
-          <stop offset="18%" stopColor={color} />
-          <stop offset="100%" stopColor={color} stopOpacity="0.72" />
+        <linearGradient id={`metal-${id}`} x1="0.15" y1="0" x2="0.85" y2="1">
+          <stop offset="0%" stopColor={mix(color, 255, 0.72)} />
+          <stop offset="38%" stopColor={color} />
+          <stop offset="72%" stopColor={mix(color, 0, 0.32)} />
+          <stop offset="100%" stopColor={mix(color, 255, 0.25)} />
+        </linearGradient>
+        <linearGradient id={`base-${id}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={mix(color, 255, 0.45)} />
+          <stop offset="55%" stopColor={mix(color, 0, 0.18)} />
+          <stop offset="100%" stopColor={mix(color, 0, 0.55)} />
         </linearGradient>
       </defs>
-      <ellipse cx={12} cy={28.4} rx={9.5} ry={2} fill="#000" opacity={0.45} />
-      {active && <ellipse cx={12} cy={27.6} rx={11.5} ry={2.8} fill="none" stroke={color} strokeWidth={1.2} opacity={0.9} />}
-      <path d={path} fill={`url(#pawn-${id})`} stroke="#070e1f" strokeWidth={1.3} strokeLinejoin="round" fillRule="evenodd" />
-      <path d={path} fill="none" stroke="#ffffff" strokeOpacity={0.35} strokeWidth={0.6} transform="translate(-0.4 -0.4)" fillRule="evenodd" />
+      <ellipse cx={12} cy={28.6} rx={10} ry={1.9} fill="#000" opacity={0.5} />
+      {active && <ellipse cx={12} cy={27.4} rx={11.8} ry={3.2} fill="none" stroke="#f7c060" strokeWidth={1.1} opacity={0.95} />}
+      <path d="M3.2 26.6c0-1.6 3.9-2.8 8.8-2.8s8.8 1.2 8.8 2.8v.6c0 1.5-3.9 2.6-8.8 2.6s-8.8-1.1-8.8-2.6z" fill={`url(#base-${id})`} stroke="#0a1222" strokeWidth={0.6} />
+      <ellipse cx={12} cy={26.5} rx={8.4} ry={2.3} fill={mix(color, 255, 0.3)} opacity={0.55} />
+      <svg x={1.2} y={2.2} width={21.6} height={22.6} viewBox={`0 0 ${icon.width} ${icon.height}`} overflow="visible" dangerouslySetInnerHTML={{ __html: body }} />
     </svg>
   );
 }

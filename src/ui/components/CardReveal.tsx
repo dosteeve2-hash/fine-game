@@ -1,7 +1,8 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Lightbulb, ShieldCheck, Shuffle, Sparkles } from "lucide-react";
+import { Lightbulb, ShieldCheck } from "lucide-react";
+import { ArtIcon } from "../art";
 import { useEffect, useState } from "react";
 import type { GameState } from "../../engine";
 import { audio } from "../audio/engine";
@@ -61,8 +62,8 @@ export function CardReveal({ card, state, names, onClose }: Props) {
   const found = card ? findCard(card.cardId) : null;
   const prefix = card ? cardPrefix(card.cardId) : "";
   const isOpportunity = card?.deck === "opportunity";
-  const tone = isOpportunity ? "#22d98a" : card && card.amount < 0 ? "#f87171" : "#f0a832";
-  const Icon = isOpportunity ? Sparkles : Shuffle;
+  const tone = isOpportunity ? "#5fbf95" : card && card.amount < 0 ? "#e2706b" : "#f0a832";
+  const deckArt = isOpportunity ? "game-icons:open-treasure-chest" : "game-icons:card-random";
   const effect = found ? effectLine(found.card.effect) : null;
   const base = found?.card.effect.type === "cash" ? found.card.effect.amount ?? 0 : 0;
   const saved = card && base < 0 && card.amount > base ? card.amount - base : 0;
@@ -100,23 +101,23 @@ export function CardReveal({ card, state, names, onClose }: Props) {
             >
               <div className="absolute inset-0 flex flex-col overflow-hidden rounded-[22px] border bg-[#f5f0e8] text-[#111d34] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)]" style={{ backfaceVisibility: "hidden", borderColor: tone }}>
                 <div className="flex items-center gap-2 px-4 py-3" style={{ background: tone }}>
-                  <Icon size={18} strokeWidth={iconStroke} color="#0c1528" aria-hidden />
+                  <ArtIcon name={deckArt} size={18} color="#0c1528" />
                   <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-[#0c1528]">{isOpportunity ? t("card.opportunity") : t("card.event")}</span>
                   <span className="ml-auto truncate font-mono text-[10px] text-[#0c1528]/75">{player ? t("card.for", { name: names[card.player] ?? "" }) : ""}</span>
                 </div>
                 <div className="relative flex flex-1 flex-col overflow-hidden px-5 pb-4 pt-4">
-                  <Icon size={190} strokeWidth={1} color={tone} className="pointer-events-none absolute -right-10 top-24 opacity-[0.13]" aria-hidden />
+                  <ArtIcon name={deckArt} size={190} color={tone} className="pointer-events-none absolute -right-10 top-24 opacity-[0.12]" />
                   <h2 className="font-serif text-[26px] font-black italic leading-[1.05]">{d(`${prefix}.title`)}</h2>
                   <p className="mt-2 text-[15px] leading-snug text-[#30405f]">{d(`${prefix}.text`)}</p>
                   {card.amount !== 0 && found?.card.effect.type === "cash" && (
-                    <div className={`mt-3 self-start rounded-xl px-3 py-1.5 font-mono text-2xl font-semibold ${card.amount > 0 ? "bg-[#22d98a]/20 text-[#0b7a4b]" : "bg-[#ef4444]/15 text-[#b91c1c]"}`}>
+                    <div className={`mt-3 self-start rounded-xl px-3 py-1.5 font-mono text-2xl font-semibold ${card.amount > 0 ? "bg-[#3cc48e]/20 text-[#17704a]" : "bg-[#e2706b]/15 text-[#a3352f]"}`}>
                       {card.amount > 0 ? "+" : "−"}
                       {money(Math.abs(card.amount))}
                     </div>
                   )}
                   {effect && <div className="mt-3 self-start rounded-xl bg-[#111d34]/8 px-3 py-1.5 font-mono text-[13px] font-semibold">{effect}</div>}
                   {saved > 0 && (
-                    <div className="mt-2 flex items-center gap-1.5 text-[13px] font-medium text-[#0b7a4b]">
+                    <div className="mt-2 flex items-center gap-1.5 text-[13px] font-medium text-[#17704a]">
                       <ShieldCheck size={16} strokeWidth={iconStroke} aria-hidden />
                       {t("card.insured", { amount: money(saved) })}
                     </div>

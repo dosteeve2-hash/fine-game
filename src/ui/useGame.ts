@@ -2,13 +2,15 @@
 
 import { useReducedMotion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { applyAction, chooseBotAction, createGame } from "../engine";
-import type { Action, GameConfig, GameEvent, GameState } from "../engine";
+import configs from "../data/config.json";
+import { applyAction, auditOffice, chooseBotAction, createGame } from "../engine";
+import type { Action, GameConfig, GameEvent, GameMode, GameState } from "../engine";
 import { explainAction, openingStatement } from "../engine/ledger";
 import type { Explanation, LogEvent, MoneyMove, Statement } from "../engine/ledger";
+import { pawnDef } from "./art/pawns";
 import { audio } from "./audio/engine";
+import type { MascotMood } from "./components/Fina";
 import { findCard } from "./text";
-import type { FinoMood } from "./components/Fino";
 
 export interface LogEntry {
   id: number;
@@ -27,6 +29,7 @@ export interface Seat {
   name: string;
   isBot: boolean;
   botLevel: 1 | 2 | 3;
+  pawn: string;
 }
 
 export interface Notice {
@@ -44,6 +47,16 @@ export interface CardShow {
   auto: boolean;
 }
 
+export type SceneKind = "salary" | "tax" | "bank" | "circle" | "rest" | "audit" | "auditExit" | "restart";
+
+export interface SceneShow {
+  id: number;
+  kind: SceneKind;
+  player: number;
+  amount?: number;
+  blocking: boolean;
+}
+
 export type Anchor = { player: number } | { space: number };
 
 export interface CoinFlight {
@@ -55,13 +68,15 @@ export interface CoinFlight {
 
 export interface Stage {
   dice: { values: [number, number]; rolling: boolean } | null;
-  hop: { player: number; position: number } | null;
+  hop: { player: number; position: number; jump?: boolean } | null;
   pulse: { space: number; key: number } | null;
-  banner: { player: number; key: number } | null;
+  banner: { player: number; key: number; human: boolean } | null;
   card: CardShow | null;
+  scene: SceneShow | null;
+  shake: number;
   notices: Notice[];
   coins: CoinFlight[];
-  mood: FinoMood;
+  mood: MascotMood;
   focus: number | null;
   statement: number | null;
 }
@@ -69,6 +84,7 @@ export interface Stage {
 interface Saved {
   state: GameState;
   names: string[];
+  pawns?: string[];
   log: LogEntry[];
   nextId: number;
   ledger?: MoveRecord[];
@@ -79,9 +95,9 @@ const saveKey = "fine.save.v1";
 const logLimit = 80;
 const ledgerLimit = 300;
 const statementLimit = 40;
-const emptyStage: Stage = { dice: null, hop: null, pulse: null, banner: null, card: null, notices: [], coins: [], mood: "idle", focus: null, statement: null };
-const normalTiming = { dice: 1150, settle: 320, hop: 235, land: 380, banner: 1350, after: 420, coin: 700, card: 4400, bot: 1200 };
-const reducedTiming = { dice: 450, settle: 120, hop: 110, land: 200, banner: 900, after: 250, coin: 300, card: 2600, bot: 600 };
+const emptyStage: Stage = { dice: null, hop: null, pulse: null, banner: null, card: null, scene: null, shake: 0, notices: [], coins: [], mood: "idle", focus: null, statement: null };
+const normalTiming = { dice: 1350, slow: 420, settle: 360, hop: 235, land: 380, banner: 1500, after: 420, coin: 700, card: 4400, bot: 1300, scene: 1650, jump: 900 };
+const reducedTiming = { dice: 450, slow: 120, settle: 120, hop: 110, land: 200, banner: 900, after: 250, coin: 300, card: 2600, bot: 600, scene: 900, jump: 250 };
 
 const noticeTypes = new Set([
   "start.salary",
@@ -99,13 +115,30 @@ const noticeTypes = new Set([
   "circle.payout",
   "circle.contribution",
   "player.restarted",
-  "trade.completed"
+  "trade.completed",
+  "audit.sent",
+  "audit.paid",
+  "audit.waited",
+  "audit.released"
 ]);
+
+const modeConfigs = configs as Record<GameMode, GameConfig>;
+
+function normalize(state: GameState): GameState {
+  const defaults = modeConfigs[state.config.mode] ?? modeConfigs.standard;
+  return {
+    ...state,
+    config: { ...state.config, auditFee: state.config.auditFee ?? defaults.auditFee, auditTurns: state.config.auditTurns ?? defaults.auditTurns },
+    players: state.players.map(player => ({ ...player, auditTurns: player.auditTurns ?? 0 }))
+  };
+}
 
 function readSave(): Saved | null {
   try {
     const raw = window.localStorage.getItem(saveKey);
-    return raw ? (JSON.parse(raw) as Saved) : null;
+    if (!raw) return null;
+    const saved = JSON.parse(raw) as Saved;
+    return { ...saved, state: normalize(saved.state) };
   } catch {
     return null;
   }
@@ -133,15 +166,18 @@ export function useGame() {
   const [busy, setBusy] = useState(false);
   const [thinking, setThinking] = useState(false);
   const [names, setNames] = useState<string[]>([]);
+  const [pawns, setPawns] = useState<string[]>([]);
   const [log, setLog] = useState<LogEntry[]>([]);
   const [ledger, setLedger] = useState<MoveRecord[]>([]);
   const [statements, setStatements] = useState<StatementRecord[]>([]);
   const [hasSave, setHasSave] = useState(false);
   const nextId = useRef(1);
   const truthRef = useRef<GameState | null>(null);
+  const pawnsRef = useRef<string[]>([]);
   const busyRef = useRef(false);
   const generation = useRef(0);
   const cardResolver = useRef<(() => void) | null>(null);
+  const sceneResolver = useRef<(() => void) | null>(null);
   const moodTimer = useRef(0);
   const timing = useRef(normalTiming);
 
@@ -157,7 +193,7 @@ export function useGame() {
     setStage(previous => ({ ...previous, ...(typeof update === "function" ? update(previous) : update) }));
   }, []);
 
-  const setMood = useCallback((mood: FinoMood, hold = 2600) => {
+  const setMood = useCallback((mood: MascotMood, hold = 2600) => {
     window.clearTimeout(moodTimer.current);
     patch({ mood });
     if (mood !== "idle" && hold > 0) moodTimer.current = window.setTimeout(() => patch({ mood: "idle" }), hold);
@@ -171,6 +207,25 @@ export function useGame() {
   const flyCoins = useCallback((from: Anchor, to: Anchor, count = 5) => {
     const flight: CoinFlight = { id: nextId.current++, from, to, count };
     patch(previous => ({ coins: [...previous.coins, flight] }));
+  }, [patch]);
+
+  const showScene = useCallback((kind: SceneKind, player: number, amount: number | undefined, blocking: boolean): Promise<void> => {
+    const scene: SceneShow = { id: nextId.current++, kind, player, blocking, ...(amount === undefined ? {} : { amount }) };
+    audio.play(`scene.${kind}`);
+    return new Promise<void>(resolve => {
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        if (sceneResolver.current === finish) sceneResolver.current = null;
+        patch(previous => (previous.scene?.id === scene.id ? { scene: null } : {}));
+        resolve();
+      };
+      sceneResolver.current?.();
+      sceneResolver.current = finish;
+      patch({ scene });
+      window.setTimeout(finish, timing.current.scene);
+    });
   }, [patch]);
 
   const record = useCallback((events: LogEvent[]) => {
@@ -202,13 +257,17 @@ export function useGame() {
       return owned ? after.players.findIndex(player => player.id === owned.ownerId) : -1;
     };
     const indexOf = (playerId?: string) => after.players.findIndex(player => player.id === playerId);
-    const followUps = (skip: Set<string>) => {
+    const followUps = async (skip: Set<string>) => {
       for (const event of explained.logEvents) {
         if (skip.has(event.type) || !noticeTypes.has(event.type)) continue;
         if (event.type === "player.restarted") {
-          audio.play("restart");
           setMood("worried", 3200);
-        } else if (event.type === "loan.defaulted" || event.type === "circle.default" || event.type === "asset.forced_sale") {
+          notify(event);
+          await showScene("restart", indexOf(event.playerId), event.amount, true);
+          if (!alive()) return;
+          continue;
+        }
+        if (event.type === "loan.defaulted" || event.type === "circle.default" || event.type === "asset.forced_sale") {
           audio.play("loan");
           setMood("worried");
         } else if (event.type === "circle.payout") {
@@ -216,6 +275,12 @@ export function useGame() {
           const receiver = indexOf(event.playerId);
           if (receiver >= 0) flyCoins({ space: 19 }, { player: receiver }, 6);
           setMood("happy");
+        } else if (event.type === "audit.released") {
+          notify(event);
+          setMood("happy");
+          await showScene("auditExit", indexOf(event.playerId), undefined, true);
+          if (!alive()) return;
+          continue;
         }
         notify(event);
       }
@@ -230,19 +295,21 @@ export function useGame() {
       audio.play("dice");
       await wait(t.dice);
       if (!alive()) return;
-      patch({ dice: { values, rolling: false } });
+      patch({ dice: { values, rolling: false }, shake: nextId.current++ });
+      audio.play("diceStop");
       await wait(t.settle);
       if (!alive()) return;
       const from = before.players[mover]?.position ?? 0;
       const salary = events.find(event => event.type === "start.salary");
+      const step = pawnDef(pawnsRef.current[mover], mover).step;
       let position = from;
-      for (let step = 1; step <= total; step += 1) {
-        position = (from + step) % before.spaces.length;
+      for (let hop = 1; hop <= total; hop += 1) {
+        position = (from + hop) % before.spaces.length;
         patch({ hop: { player: mover, position } });
-        audio.play("step");
+        audio.step(step, hop);
         if (position === 0 && salary) {
-          audio.play("salary");
           notify(salary);
+          void showScene("salary", mover, salary.amount, false);
         }
         await wait(t.hop);
         if (!alive()) return;
@@ -253,9 +320,27 @@ export function useGame() {
       await wait(t.land);
       if (!alive()) return;
 
+      const landed = before.spaces[position];
+      const sent = events.find(event => event.type === "audit.sent");
+      if (sent) {
+        setMood("worried", 0);
+        notify(sent);
+        await showScene("audit", mover, undefined, true);
+        if (!alive()) return;
+        const office = sent.amount ?? auditOffice(after.spaces);
+        patch({ hop: { player: mover, position: office, jump: true }, focus: office });
+        audio.play("auditSlam");
+        await wait(t.jump);
+        if (!alive()) return;
+        patch({ pulse: { space: office, key: nextId.current++ } });
+      } else if (landed?.type === "bank" || landed?.type === "circle" || landed?.type === "rest") {
+        await showScene(landed.type, mover, undefined, true);
+        if (!alive()) return;
+      }
+
       const card = events.find(event => event.type === "card.resolved");
       if (card?.cardKey) {
-        const deck = before.spaces[position]?.type === "opportunity" ? "opportunity" : "event";
+        const deck = landed?.type === "opportunity" ? "opportunity" : "event";
         const amount = findCard(card.cardKey)?.card.effect.type === "cash" ? card.amount ?? 0 : 0;
         setMood(deck === "opportunity" || amount > 0 ? "happy" : amount < 0 ? "worried" : "surprised", 0);
         const show: CardShow = { id: nextId.current++, cardId: card.cardKey, deck, amount, player: mover, auto: Boolean(before.players[mover]?.isBot) };
@@ -272,6 +357,11 @@ export function useGame() {
 
       const rent = events.find(event => event.type === "rent.paid");
       const tax = events.find(event => event.type === "tax.paid");
+      if (tax) {
+        setMood("worried");
+        await showScene("tax", mover, tax.amount, true);
+        if (!alive()) return;
+      }
       if (rent) {
         const owner = ownerOf(rent.assetId);
         audio.play("rentPaid");
@@ -288,12 +378,10 @@ export function useGame() {
         patch({ hop: null });
       }
       if (tax) {
-        audio.play("tax");
         flyCoins({ player: mover }, { space: position }, 4);
-        setMood("worried");
         notify(tax);
       }
-      followUps(new Set(["rent.paid", "tax.paid", "start.salary"]));
+      await followUps(new Set(["rent.paid", "tax.paid", "start.salary", "audit.sent"]));
       await wait(t.after);
       return;
     }
@@ -301,7 +389,8 @@ export function useGame() {
     if (action.type === "endTurn") {
       patch({ statement: null });
       const statementId = reveal();
-      followUps(new Set());
+      await followUps(new Set());
+      if (!alive()) return;
       if (after.phase === "finished") {
         setMood("celebrate", 0);
         return;
@@ -311,8 +400,8 @@ export function useGame() {
       const summary = explained.logEvents.find(event => event.type === "turn.statement");
       if (summary && nextIsBot) notify(summary);
       setMood("idle");
-      patch({ banner: { player: next, key: nextId.current++ }, dice: null, focus: after.players[next]?.position ?? null, pulse: null });
-      audio.play("turn");
+      patch({ banner: { player: next, key: nextId.current++, human: !nextIsBot }, dice: null, focus: after.players[next]?.position ?? null, pulse: null });
+      audio.play(nextIsBot ? "turn" : "yourTurn");
       await wait(t.banner);
       if (!alive()) return;
       patch({ banner: null, ...(statementId !== null && !nextIsBot ? { statement: statementId } : {}) });
@@ -343,11 +432,22 @@ export function useGame() {
     } else if (action.type === "joinCircle") {
       audio.play("circle");
       setMood("happy");
+    } else if (action.type === "payAudit") {
+      if (main) notify(main);
+      setMood("happy");
+      await showScene("auditExit", mover, main?.amount, true);
+      if (!alive()) return;
+      await followUps(new Set(main ? [main.type] : []));
+      await wait(t.after);
+      return;
+    } else if (action.type === "waitAudit") {
+      audio.play("auditWait");
+      setMood("worried");
     }
-    if (main && noticeTypes.has(main.type)) notify(main);
-    followUps(new Set(main ? [main.type] : []));
+    if (main && noticeTypes.has(main.type) && !(action.type === "waitAudit" && events.some(event => event.type === "audit.released"))) notify(main);
+    await followUps(new Set(main ? [main.type] : []));
     await wait(t.after);
-  }, [flyCoins, notify, patch, record, recordMoney, setMood]);
+  }, [flyCoins, notify, patch, record, recordMoney, setMood, showScene]);
 
   const act = useCallback(async (action: Action) => {
     const current = truthRef.current;
@@ -381,16 +481,20 @@ export function useGame() {
     generation.current += 1;
     cardResolver.current?.();
     cardResolver.current = null;
+    sceneResolver.current?.();
+    sceneResolver.current = null;
     busyRef.current = false;
     setBusy(false);
     setThinking(false);
     window.clearTimeout(moodTimer.current);
   }, []);
 
-  const open = useCallback((game: GameState, gameNames: string[], saved: { log: LogEntry[]; ledger: MoveRecord[]; statements: StatementRecord[] }, opening: StatementRecord | null) => {
+  const open = useCallback((game: GameState, gameNames: string[], gamePawns: string[], saved: { log: LogEntry[]; ledger: MoveRecord[]; statements: StatementRecord[] }, opening: StatementRecord | null) => {
     reset();
     audio.unlock();
     setNames(gameNames);
+    pawnsRef.current = gamePawns;
+    setPawns(gamePawns);
     setLog(saved.log);
     setLedger(saved.ledger);
     setStatements(opening ? [...saved.statements, opening] : saved.statements);
@@ -398,9 +502,10 @@ export function useGame() {
     setTruth(game);
     setView(game);
     const current = game.currentPlayerIndex;
-    const showOpening = opening !== null && !game.players[current]?.isBot;
-    setStage({ ...emptyStage, banner: { player: current, key: nextId.current++ }, focus: game.players[current]?.position ?? 0 });
-    audio.play("turn");
+    const human = !game.players[current]?.isBot;
+    const showOpening = opening !== null && human;
+    setStage({ ...emptyStage, banner: { player: current, key: nextId.current++, human }, focus: game.players[current]?.position ?? 0 });
+    audio.play(human ? "yourTurn" : "turn");
     const token = generation.current;
     busyRef.current = true;
     setBusy(true);
@@ -424,14 +529,15 @@ export function useGame() {
     const first = openingStatement(game);
     const moves = first.moves.map(move => ({ ...move, id: nextId.current++ }));
     const opening: StatementRecord = { ...first.statement, id: nextId.current++ };
-    open(game, seats.map(seat => seat.name), { log: [], ledger: moves, statements: [] }, opening);
+    open(game, seats.map(seat => seat.name), seats.map(seat => seat.pawn), { log: [], ledger: moves, statements: [] }, opening);
   }, [open]);
 
   const resume = useCallback(() => {
     const saved = readSave();
     if (!saved) return;
     nextId.current = saved.nextId;
-    open(saved.state, saved.names, { log: saved.log, ledger: saved.ledger ?? [], statements: saved.statements ?? [] }, null);
+    const savedPawns = saved.state.players.map((_, index) => saved.pawns?.[index] ?? pawnDef(undefined, index).id);
+    open(saved.state, saved.names, savedPawns, { log: saved.log, ledger: saved.ledger ?? [], statements: saved.statements ?? [] }, null);
   }, [open]);
 
   const clear = useCallback(() => {
@@ -455,6 +561,7 @@ export function useGame() {
   }, [reset, clear]);
 
   const dismissCard = useCallback(() => cardResolver.current?.(), []);
+  const dismissScene = useCallback(() => sceneResolver.current?.(), []);
   const dismissStatement = useCallback(() => patch({ statement: null }), [patch]);
   const dismissNotice = useCallback((id: number) => patch(previous => ({ notices: previous.notices.filter(notice => notice.id !== id) })), [patch]);
   const removeCoins = useCallback((id: number) => patch(previous => ({ coins: previous.coins.filter(flight => flight.id !== id) })), [patch]);
@@ -465,8 +572,8 @@ export function useGame() {
       writeSave(null);
       return;
     }
-    writeSave({ state: truth, names, log, nextId: nextId.current, ledger, statements });
-  }, [truth, names, log, ledger, statements]);
+    writeSave({ state: truth, names, pawns, log, nextId: nextId.current, ledger, statements });
+  }, [truth, names, pawns, log, ledger, statements]);
 
   useEffect(() => {
     if (!truth || busy || truth.phase === "finished") return;
@@ -483,5 +590,5 @@ export function useGame() {
     return () => window.clearTimeout(timer);
   }, [truth, busy, act, reduced, setMood]);
 
-  return { truth, view, stage, busy, thinking, names, log, ledger, statements, hasSave, start, resume, act, leave, discard, dismissCard, dismissStatement, dismissNotice, removeCoins };
+  return { truth, view, stage, busy, thinking, names, pawns, log, ledger, statements, hasSave, start, resume, act, leave, discard, dismissCard, dismissScene, dismissStatement, dismissNotice, removeCoins };
 }

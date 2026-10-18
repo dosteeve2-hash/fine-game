@@ -16,6 +16,7 @@ export type MoveReason =
   | "rentReceived"
   | "rentPaid"
   | "tax"
+  | "auditFee"
   | "card"
   | "assetBought"
   | "assetUpgraded"
@@ -160,6 +161,7 @@ export function explainAction(before: GameState, action: Action, after: GameStat
       logEvents.push({ ...event, ...(owner ? { counterpartId: owner } : {}) });
       continue;
     } else if (event.type === "tax.paid") push(id, "tax", -amount);
+    else if (event.type === "audit.paid") push(id, "auditFee", -amount);
     else if (event.type === "card.resolved") {
       if (event.cardKey && cashCards.has(event.cardKey)) push(id, "card", amount, { cardKey: event.cardKey });
     } else if (event.type === "asset.bought") push(id, "assetBought", -amount, rest);

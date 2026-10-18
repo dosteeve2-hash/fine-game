@@ -9,7 +9,7 @@ import { iconStroke } from "../icons";
 
 export function SoundControl() {
   const { t } = useI18n();
-  const { muted, music, volume, toggleMute, toggleMusic, setVolume } = useAudio();
+  const { muted, music, volume, musicVolume, sfxVolume, toggleMute, toggleMusic, setVolume, setMusicVolume, setSfxVolume } = useAudio();
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement | null>(null);
 
@@ -74,6 +74,28 @@ export function SoundControl() {
                 max={100}
                 value={Math.round(volume * 100)}
                 onChange={event => setVolume(Number(event.target.value) / 100)}
+                className="mt-1 w-full accent-[#f0a832]"
+              />
+            </label>
+            <label className="mt-2 block px-1">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-text3">{t("audio.musicVolume")}</span>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={Math.round(musicVolume * 100)}
+                onChange={event => setMusicVolume(Number(event.target.value) / 100)}
+                className="mt-1 w-full accent-[#f0a832]"
+              />
+            </label>
+            <label className="mt-2 block px-1">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-text3">{t("audio.sfxVolume")}</span>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={Math.round(sfxVolume * 100)}
+                onChange={event => setSfxVolume(Number(event.target.value) / 100)}
                 className="mt-1 w-full accent-[#f0a832]"
               />
             </label>

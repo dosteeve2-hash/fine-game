@@ -141,9 +141,8 @@
     ]
   },
   {
-    "type": "tax",
-    "titleKey": "space.tax",
-    "amount": 130
+    "type": "audit",
+    "titleKey": "space.audit"
   },
   {
     "type": "asset",
@@ -375,6 +374,7 @@
   },
   {
     "type": "rest",
-    "titleKey": "space.rest"
+    "titleKey": "space.audit_office",
+    "office": true
   }
 ]

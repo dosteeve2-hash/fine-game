@@ -13,6 +13,8 @@
     "messages": "tsx scripts/check-messages.ts"
   },
   "devDependencies": {
+    "@dicebear/core": "^9.4.3",
+    "@dicebear/lorelei": "^9.4.2",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^26.6.5",
     "@types/react": "^19.3.0",

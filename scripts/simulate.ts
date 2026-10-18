@@ -14,12 +14,15 @@ interface ModeStatistics {
   averageTurns: number;
   winShareBySeatPercent: number[];
   winRateByLevelPercent: Record<1 | 2 | 3, number>;
+  audit: { sentPerGame: number; paidExitPercent: number; turnsWaitedPerSending: number };
   criteriaMet: {
     earlyFinishAtLeast99Percent: boolean;
     noSeatAbove40Percent: boolean;
     level3BeatsLevel1ByFivePoints: boolean;
   };
 }
+
+const auditCounts = { sent: 0, paid: 0, waited: 0 };
 
 function simulateGame(config: GameConfig, seed: number, levels: Array<1 | 2 | 3>): GameState {
   let state = createGame({ ...config, playerCount: 4, botLevels: levels }, seed);
@@ -29,7 +32,13 @@ function simulateGame(config: GameConfig, seed: number, levels: Array<1 | 2 | 3>
     const player = state.players[state.currentPlayerIndex];
     if (!player) throw new Error("The current player is missing");
     const action = chooseBotAction(state, player.botLevel);
-    state = applyAction(state, action).state;
+    const result = applyAction(state, action);
+    for (const event of result.events) {
+      if (event.type === "audit.sent") auditCounts.sent += 1;
+      else if (event.type === "audit.paid") auditCounts.paid += 1;
+      else if (event.type === "audit.waited") auditCounts.waited += 1;
+    }
+    state = result.state;
   }
   if (state.phase !== "finished") throw new Error("A simulated game exceeded its action limit");
   return state;
@@ -39,7 +48,7 @@ const modes = Object.entries(configs) as Array<[GameConfig["mode"], GameConfig]>
 const results: Record<string, ModeStatistics> = {};
 
 for (const [modeIndex, [mode, config]] of modes.entries()) {
-  const stats: Omit<ModeStatistics, "finishRateBeforeMaxPercent" | "averageTurns" | "winShareBySeatPercent" | "winRateByLevelPercent" | "criteriaMet"> = {
+  const stats: Omit<ModeStatistics, "finishRateBeforeMaxPercent" | "averageTurns" | "winShareBySeatPercent" | "winRateByLevelPercent" | "audit" | "criteriaMet"> = {
     games: Number(process.env.SIM_GAMES ?? 1000),
     finishedEarly: 0,
     turnsTotal: 0,
@@ -48,6 +57,9 @@ for (const [modeIndex, [mode, config]] of modes.entries()) {
     entrantsByLevel: { 1: 0, 2: 0, 3: 0 },
     winsByReason: {}
   };
+  auditCounts.sent = 0;
+  auditCounts.paid = 0;
+  auditCounts.waited = 0;
   for (let game = 0; game < stats.games; game += 1) {
     const base: Array<1 | 2 | 3> = [1, 2, 3, 3];
     const rotation = game % base.length;
@@ -79,6 +91,11 @@ for (const [modeIndex, [mode, config]] of modes.entries()) {
     averageTurns: Number((stats.turnsTotal / stats.games).toFixed(2)),
     winShareBySeatPercent: winShareBySeat,
     winRateByLevelPercent: winRateByLevel,
+    audit: {
+      sentPerGame: Number((auditCounts.sent / stats.games).toFixed(2)),
+      paidExitPercent: Number((auditCounts.paid / Math.max(1, auditCounts.sent) * 100).toFixed(1)),
+      turnsWaitedPerSending: Number((auditCounts.waited / Math.max(1, auditCounts.sent)).toFixed(2))
+    },
     criteriaMet: {
       earlyFinishAtLeast99Percent: finishRate >= 99,
       noSeatAbove40Percent: winShareBySeat.every(share => share <= 40),

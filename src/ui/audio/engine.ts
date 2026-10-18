@@ -16,20 +16,33 @@ export type Sfx =
   | "victory"
   | "turn"
   | "salary"
-  | "tax";
+  | "tax"
+  | "diceStop"
+  | "yourTurn"
+  | "auditSlam"
+  | "auditWait"
+  | "statement"
+  | `scene.${SceneSound}`;
+
+export type SceneSound = "salary" | "tax" | "bank" | "circle" | "rest" | "audit" | "auditExit" | "restart";
+export type StepKind = "chuff" | "splash" | "prop" | "flame" | "hoof" | "roll" | "clank" | "pad" | "coin" | "die" | "thud" | "flap";
 
 export interface AudioSettings {
   muted: boolean;
   music: boolean;
   volume: number;
+  musicVolume: number;
+  sfxVolume: number;
 }
 
 const storageKey = "fine.audio.v1";
 const tempo = 94;
 const eighth = 60 / tempo / 2;
 const lookahead = 0.15;
+const musicLevel = 0.32;
+const sfxLevel = 0.75;
 
-const defaults: AudioSettings = { muted: false, music: true, volume: 0.7 };
+const defaults: AudioSettings = { muted: false, music: true, volume: 0.7, musicVolume: 0.8, sfxVolume: 1 };
 
 const chords: Array<{ pad: number[]; bass: number; arp: number[] }> = [
   { pad: [62, 66, 69], bass: 50, arp: [62, 66, 69, 74] },
@@ -62,7 +75,9 @@ export function readAudioSettings(): AudioSettings {
     return {
       muted: typeof parsed.muted === "boolean" ? parsed.muted : defaults.muted,
       music: typeof parsed.music === "boolean" ? parsed.music : defaults.music,
-      volume: typeof parsed.volume === "number" ? Math.min(1, Math.max(0, parsed.volume)) : defaults.volume
+      volume: typeof parsed.volume === "number" ? Math.min(1, Math.max(0, parsed.volume)) : defaults.volume,
+      musicVolume: typeof parsed.musicVolume === "number" ? Math.min(1, Math.max(0, parsed.musicVolume)) : defaults.musicVolume,
+      sfxVolume: typeof parsed.sfxVolume === "number" ? Math.min(1, Math.max(0, parsed.sfxVolume)) : defaults.sfxVolume
     };
   } catch {
     return defaults;
@@ -108,9 +123,9 @@ class AudioEngine {
     compressor.ratio.value = 3;
     master.connect(compressor).connect(ctx.destination);
     const musicBus = ctx.createGain();
-    musicBus.gain.value = this.settings.music ? 0.32 : 0;
+    musicBus.gain.value = this.settings.music ? musicLevel * this.settings.musicVolume : 0;
     const sfxBus = ctx.createGain();
-    sfxBus.gain.value = 0.75;
+    sfxBus.gain.value = sfxLevel * this.settings.sfxVolume;
     const reverb = ctx.createConvolver();
     reverb.buffer = this.impulse(ctx, 2.2);
     const wet = ctx.createGain();
@@ -175,9 +190,10 @@ class AudioEngine {
     this.settings = { ...this.settings, ...patch };
     writeAudioSettings(this.settings);
     const ctx = this.ctx;
-    if (ctx && this.master && this.musicBus) {
+    if (ctx && this.master && this.musicBus && this.sfxBus) {
       this.master.gain.setTargetAtTime(this.settings.volume, ctx.currentTime, 0.05);
-      this.musicBus.gain.setTargetAtTime(this.settings.music ? 0.32 : 0, ctx.currentTime, 0.2);
+      this.musicBus.gain.setTargetAtTime(this.settings.music ? musicLevel * this.settings.musicVolume : 0, ctx.currentTime, 0.2);
+      this.sfxBus.gain.setTargetAtTime(sfxLevel * this.settings.sfxVolume, ctx.currentTime, 0.05);
     }
     this.sync();
     return this.settings;
@@ -402,6 +418,70 @@ class AudioEngine {
         this.kalimba(midi(74), t, 0.1, out);
         this.kalimba(midi(81), t + 0.12, 0.08, out);
         break;
+      case "yourTurn":
+        [69, 74, 78, 81].forEach((note, i) => this.kalimba(midi(note), t + i * 0.08, 0.12, out));
+        this.coin(2637, t + 0.34, 0.05, out);
+        break;
+      case "diceStop":
+        this.knock(t, 0.3, 1300, out);
+        this.knock(t + 0.12, 0.18, 1150, out);
+        this.knock(t + 0.2, 0.09, 1000, out);
+        this.tone("sine", 70, t, 0.22, 0.25, out, { glide: 45 });
+        break;
+      case "auditSlam":
+        this.knock(t, 0.4, 420, out);
+        this.tone("sine", 90, t, 0.3, 0.35, out, { glide: 50 });
+        break;
+      case "auditWait":
+        this.knock(t, 0.12, 2400, out);
+        this.knock(t + 0.42, 0.1, 1900, out);
+        this.tone("triangle", midi(57), t + 0.1, 0.05, 0.6, out);
+        break;
+      case "statement":
+        this.tone("sine", midi(81), t, 0.06, 0.25, out);
+        this.tone("sine", midi(86), t + 0.09, 0.05, 0.35, out);
+        this.noiseBurst(t, 0.12, 0.04, out, { type: "bandpass", frequency: 3200, q: 1.2, sweepTo: 5200 });
+        break;
+      case "scene.salary":
+        for (let i = 0; i < 12; i += 1) this.coin(1400 + Math.random() * 1400, t + i * 0.07 + Math.random() * 0.03, 0.06, out);
+        [62, 66, 69, 74].forEach((note, i) => this.kalimba(midi(note), t + 0.1 + i * 0.12, 0.1, out));
+        break;
+      case "scene.tax":
+        this.noiseBurst(t + 0.28, 0.09, 0.4, out, { type: "lowpass", frequency: 700 });
+        this.tone("sine", 82, t + 0.28, 0.32, 0.3, out, { glide: 48 });
+        this.noiseBurst(t + 0.33, 0.12, 0.08, out, { type: "highpass", frequency: 3200 });
+        this.tone("triangle", midi(53), t + 0.5, 0.06, 0.6, out);
+        break;
+      case "scene.bank":
+        this.noiseBurst(t, 0.55, 0.09, out, { type: "bandpass", frequency: 260, q: 6, sweepTo: 520 });
+        this.knock(t + 0.55, 0.28, 600, out);
+        [2093, 2637, 3136].forEach((frequency, i) => this.tone("sine", frequency, t + 0.7 + i * 0.07, 0.04, 0.6, out));
+        break;
+      case "scene.circle":
+        [62, 66, 69, 74, 78].forEach((note, i) => this.kalimba(midi(note), t + i * 0.1, 0.11, out));
+        [1568, 1760, 2093].forEach((frequency, i) => this.coin(frequency, t + 0.6 + i * 0.08, 0.07, out));
+        break;
+      case "scene.rest":
+        this.noiseBurst(t, 1.2, 0.05, out, { type: "lowpass", frequency: 500, sweepTo: 1600 });
+        [62, 69, 74].forEach(note => this.tone("sine", midi(note), t + 0.3, 0.035, 1.4, out, { attack: 0.4 }));
+        break;
+      case "scene.audit":
+        for (let cycle = 0; cycle < 2; cycle += 1) {
+          this.tone("sine", 660, t + cycle * 0.5, 0.06, 0.25, out, { glide: 880 });
+          this.tone("sine", 880, t + cycle * 0.5 + 0.25, 0.06, 0.25, out, { glide: 660 });
+        }
+        [1.05, 1.3, 1.55].forEach(at => this.knock(t + at, 0.32, 380, out));
+        break;
+      case "scene.auditExit":
+        this.noiseBurst(t, 0.7, 0.06, out, { type: "lowpass", frequency: 1800, sweepTo: 300 });
+        [62, 66, 69, 74].forEach((note, i) => this.kalimba(midi(note), t + 0.25 + i * 0.07, 0.11, out));
+        break;
+      case "scene.restart":
+        this.noiseBurst(t, 0.12, 0.3, out, { type: "highpass", frequency: 1800 });
+        this.noiseBurst(t + 0.05, 1.1, 0.22, out, { type: "lowpass", frequency: 260, sweepTo: 90 });
+        this.tone("sine", 55, t + 0.05, 0.25, 0.9, out, { glide: 38 });
+        [69, 74, 78, 81].forEach((note, i) => this.kalimba(midi(note), t + 1 + i * 0.1, 0.11, out));
+        break;
       case "victory": {
         const hits: Array<[number, number[], number]> = [
           [0, [62, 66, 69], 0.22],
@@ -418,6 +498,63 @@ class AudioEngine {
         [86, 88, 90, 93].forEach((note, i) => this.tone("sine", midi(note), t + 1 + i * 0.08, 0.04, 0.4, out));
         break;
       }
+    }
+  }
+
+  private knock(time: number, peak: number, frequency: number, out: AudioNode) {
+    this.noiseBurst(time, 0.05, peak, out, { type: "bandpass", frequency, q: 2.5 });
+    this.tone("triangle", frequency * 0.35, time, peak * 0.5, 0.06, out, { glide: frequency * 0.2 });
+  }
+
+  step(kind: StepKind, index: number) {
+    const ctx = this.ctx;
+    const out = this.sfxBus;
+    if (!ctx || !out || this.settings.muted || ctx.state !== "running") return;
+    const t = ctx.currentTime + 0.01;
+    const odd = index % 2 === 1;
+    switch (kind) {
+      case "chuff":
+        this.noiseBurst(t, 0.12, odd ? 0.14 : 0.1, out, { type: "bandpass", frequency: odd ? 900 : 700, q: 1.4, sweepTo: 300 });
+        break;
+      case "splash":
+        this.noiseBurst(t, 0.18, 0.08, out, { type: "bandpass", frequency: 1400, q: 0.8, sweepTo: 600 });
+        break;
+      case "prop":
+        for (let i = 0; i < 4; i += 1) this.noiseBurst(t + i * 0.035, 0.025, 0.06, out, { type: "lowpass", frequency: 900 });
+        break;
+      case "flame":
+        this.noiseBurst(t, 0.2, 0.09, out, { type: "highpass", frequency: 1800, sweepTo: 4200 });
+        break;
+      case "hoof":
+        this.knock(t, 0.12, odd ? 1500 : 1250, out);
+        this.knock(t + 0.07, 0.08, 1400, out);
+        break;
+      case "roll":
+        this.noiseBurst(t, 0.14, 0.07, out, { type: "lowpass", frequency: 420 });
+        this.tone("triangle", odd ? 520 : 470, t, 0.03, 0.05, out);
+        break;
+      case "clank":
+        this.tone("sine", 1480, t, 0.07, 0.25, out);
+        this.tone("sine", 2380, t, 0.04, 0.18, out);
+        this.knock(t, 0.08, 900, out);
+        break;
+      case "pad":
+        this.tone("sine", odd ? 220 : 196, t, 0.1, 0.07, out, { glide: 120 });
+        break;
+      case "coin":
+        this.coin(odd ? 2349 : 2093, t, 0.05, out);
+        break;
+      case "die":
+        this.knock(t, 0.1, odd ? 1900 : 1700, out);
+        break;
+      case "thud":
+        this.tone("sine", 72, t, 0.26, 0.2, out, { glide: 45 });
+        this.noiseBurst(t, 0.08, 0.06, out, { type: "lowpass", frequency: 300 });
+        break;
+      case "flap":
+        this.noiseBurst(t, 0.05, 0.06, out, { type: "bandpass", frequency: 2200, q: 1 });
+        this.noiseBurst(t + 0.06, 0.05, 0.05, out, { type: "bandpass", frequency: 2000, q: 1 });
+        break;
     }
   }
 

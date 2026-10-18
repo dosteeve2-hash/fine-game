@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { HandCoins, Landmark, Receipt, RotateCcw, ShieldCheck, Store, TrendingDown, TrendingUp, Wallet, type LucideIcon } from "lucide-react";
+import { Gavel, HandCoins, Landmark, Receipt, RotateCcw, ShieldCheck, Store, TrendingDown, TrendingUp, Wallet, type LucideIcon } from "lucide-react";
 import { useEffect } from "react";
 import type { GameState } from "../../engine";
 import { iconStroke } from "../icons";
@@ -32,10 +32,14 @@ const icons: Record<string, LucideIcon> = {
   "circle.payout": HandCoins,
   "circle.contribution": HandCoins,
   "turn.statement": Receipt,
-  "player.restarted": RotateCcw
+  "player.restarted": RotateCcw,
+  "audit.sent": Gavel,
+  "audit.paid": Gavel,
+  "audit.waited": Gavel,
+  "audit.released": Gavel
 };
 
-const losses = new Set(["tax.paid", "rent.paid", "asset.forced_sale", "loan.defaulted", "circle.default", "circle.contribution", "player.restarted"]);
+const losses = new Set(["tax.paid", "rent.paid", "asset.forced_sale", "loan.defaulted", "circle.default", "circle.contribution", "player.restarted", "audit.sent", "audit.paid", "audit.waited"]);
 
 function NoticeItem({ notice, state, names, onDismiss }: { notice: Notice; state: GameState; names: string[]; onDismiss: (id: number) => void }) {
   const { eventText } = useText();

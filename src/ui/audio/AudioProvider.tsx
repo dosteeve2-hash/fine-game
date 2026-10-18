@@ -9,12 +9,14 @@ interface AudioValue extends AudioSettings {
   toggleMute: () => void;
   toggleMusic: () => void;
   setVolume: (volume: number) => void;
+  setMusicVolume: (volume: number) => void;
+  setSfxVolume: (volume: number) => void;
 }
 
 const AudioContextValue = createContext<AudioValue | null>(null);
 
 export function AudioProvider({ children }: { children: ReactNode }) {
-  const [settings, setSettings] = useState<AudioSettings>({ muted: false, music: true, volume: 0.7 });
+  const [settings, setSettings] = useState<AudioSettings>(audio.settings);
 
   useEffect(() => {
     setSettings(audio.load());
@@ -35,8 +37,17 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   const setVolume = useCallback((volume: number) => {
     setSettings(audio.update({ volume, muted: volume === 0 }));
   }, []);
+  const setMusicVolume = useCallback((musicVolume: number) => {
+    setSettings(audio.update({ musicVolume, music: musicVolume > 0 }));
+  }, []);
+  const setSfxVolume = useCallback((sfxVolume: number) => {
+    setSettings(audio.update({ sfxVolume }));
+  }, []);
 
-  const value = useMemo<AudioValue>(() => ({ ...settings, unlock, play, toggleMute, toggleMusic, setVolume }), [settings, unlock, play, toggleMute, toggleMusic, setVolume]);
+  const value = useMemo<AudioValue>(
+    () => ({ ...settings, unlock, play, toggleMute, toggleMusic, setVolume, setMusicVolume, setSfxVolume }),
+    [settings, unlock, play, toggleMute, toggleMusic, setVolume, setMusicVolume, setSfxVolume]
+  );
 
   return <AudioContextValue.Provider value={value}>{children}</AudioContextValue.Provider>;
 }

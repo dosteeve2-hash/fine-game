@@ -1,4 +1,4 @@
-const CACHE = "fine-v3";
+const CACHE = "fine-v4";
 const SHELL = ["/", "/manifest.webmanifest", "/icon.svg", "/icon-192.png", "/icon-512.png"];
 
 self.addEventListener("install", event => {

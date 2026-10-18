@@ -39,8 +39,15 @@ function Die({ value, rolling, size, delay }: { value: number; rolling: boolean;
       setFace(value);
       return;
     }
-    const timer = window.setInterval(() => setFace(1 + Math.floor(Math.random() * 6)), 90);
-    return () => window.clearInterval(timer);
+    let pause = 60;
+    let timer = 0;
+    const tick = () => {
+      setFace(1 + Math.floor(Math.random() * 6));
+      pause = Math.min(320, pause * 1.16);
+      timer = window.setTimeout(tick, pause);
+    };
+    timer = window.setTimeout(tick, pause);
+    return () => window.clearTimeout(timer);
   }, [rolling, value]);
 
   return (
@@ -48,10 +55,10 @@ function Die({ value, rolling, size, delay }: { value: number; rolling: boolean;
       style={{ width: size, height: size, filter: "drop-shadow(0 6px 10px rgba(0,0,0,0.45))" }}
       animate={
         rolling && !reduced
-          ? { rotate: [0, 120, 250, 360], y: [0, -size * 0.35, 0, -size * 0.15, 0], x: [0, size * 0.08, -size * 0.06, 0], scale: [1, 0.92, 1.04, 1] }
-          : { rotate: 0, y: 0, x: 0, scale: 1 }
+          ? { rotate: [0, 200, 330, 380, 360], y: [0, -size * 0.45, 0, -size * 0.2, 0, -size * 0.06, 0], x: [0, size * 0.1, -size * 0.06, size * 0.03, 0], scale: [1, 0.92, 1.04, 1] }
+          : { rotate: 0, y: [-size * 0.12, 0, -size * 0.05, 0], x: 0, scale: [1.06, 0.96, 1] }
       }
-      transition={rolling && !reduced ? { duration: 0.42, repeat: Infinity, ease: "easeInOut", delay } : { type: "spring", stiffness: 420, damping: 16 }}
+      transition={rolling && !reduced ? { duration: 1.25, ease: [0.2, 0.7, 0.3, 1], delay } : { duration: reduced ? 0.1 : 0.32, ease: "easeOut" }}
     >
       <Face value={face} size={size} />
     </motion.div>

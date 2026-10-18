@@ -22,12 +22,12 @@ export function SpaceDetails({ state, names, index, compact = false }: Props) {
   const accent = accentFor(space);
 
   if (space.type !== "asset" || !space.assetId || !space.family) {
-    const info = t(`space.info.${space.type}` as MessageKey, { amount: money(space.amount ?? 0) });
+    const info = t((space.office ? "space.info.office" : `space.info.${space.type}`) as MessageKey, { amount: money(space.amount ?? 0), n: state.config.auditTurns, fee: money(state.config.auditFee) });
     return (
       <div className="overflow-hidden rounded-2xl border border-line2 bg-bg3" style={{ boxShadow: `inset 0 3px 0 ${accent}` }}>
         <div className={compact ? "flex items-start gap-3 p-3" : "flex items-start gap-3 p-4"}>
           <span className="flex shrink-0 items-center justify-center rounded-xl" style={{ width: compact ? 36 : 44, height: compact ? 36 : 44, background: withAlpha(accent, 0.14) }}>
-            <SpaceIcon space={space} size={compact ? 20 : 24} color={accent} />
+            <SpaceIcon space={space} size={compact ? 22 : 28} color="#e6c98f" badge />
           </span>
           <div className="min-w-0">
             <div className="font-serif text-lg font-bold italic leading-tight">{d(space.titleKey)}</div>
@@ -78,7 +78,7 @@ export function SpaceDetails({ state, names, index, compact = false }: Props) {
                 {[1, 2, 3].map(row => (
                   <tr key={row} className={row === level ? "font-semibold" : ""} style={row === level && ownerIndex >= 0 ? { background: withAlpha(playerColors[ownerIndex] ?? "#f0a832", 0.28) } : undefined}>
                     <td className="py-0.5 pl-1 text-left">{t("deed.level", { level: row })}</td>
-                    <td className="py-0.5 text-right text-[#0b7a4b]">+{number(income * row)}</td>
+                    <td className="py-0.5 text-right text-[#17704a]">+{number(income * row)}</td>
                     <td className="py-0.5 pr-1 text-right">{number(rent * row)}</td>
                   </tr>
                 ))}

@@ -26,17 +26,28 @@ getWinner(state: GameState): PlayerId | null
 
 ## Plateau (src/data/board.json) : 40 cases en boucle
 
-Types : `start` (Jour de paie), `asset`, `circle`, `event`, `opportunity`, `tax`, `bank`, `rest`.
+Types : `start` (Jour de paie), `asset`, `circle`, `event`, `opportunity`, `tax`, `audit` (Contrôle fiscal), `bank`, `rest`.
 - 24 `asset` répartis en 6 familles de 4 (ex. commerce, agriculture, immobilier, transport, énergie, technologie), prix croissants.
-- 2 `circle`, 4 `event`, 3 `opportunity`, 2 `tax`, 2 `bank`, 1 `start`, 1 `rest`, reste à compléter pour atteindre 40.
+- 2 `circle`, 5 `event`, 3 `opportunity`, 1 `tax`, 1 `audit`, 2 `bank`, 1 `start`, 2 `rest` dont le coin « Audit / Repos » (`office: true`).
 - Les familles et noms de villes sont inspirés de plusieurs continents, sans univers unique.
 
 ## Tour de jeu
 
-1. `roll` : deux dés à 6 faces (PRNG). Pas de double qui rejoue (anti-complexité en v0).
-2. Déplacement, puis résolution de la case.
-3. Phase libre (actions optionnelles) : `buyAsset`, `upgradeAsset`, `sellAsset`, `takeLoan`, `repayLoan`, `buyInsurance`, `proposeTrade` (v0 : échange simple d'actifs et de cash, accepté ou refusé par l'autre joueur), `joinCircle`.
-4. `endTurn`. Début du tour suivant : encaissement des revenus, paiement des dépenses.
+1. Avant de lancer, le joueur peut déjà gérer ses biens : `upgradeAsset`, `sellAsset`, `takeLoan`, `repayLoan` sont légaux en phase `roll`.
+2. `roll` : deux dés à 6 faces (PRNG). Pas de double qui rejoue (anti-complexité en v0). Un joueur retenu à l'Audit ne lance pas : il choisit `payAudit` ou `waitAudit` (voir plus bas).
+3. Déplacement, puis résolution de la case.
+4. Phase libre (actions optionnelles) : `buyAsset`, `upgradeAsset`, `sellAsset`, `takeLoan`, `repayLoan`, `buyInsurance`, `proposeTrade` (v0 : échange simple d'actifs et de cash, accepté ou refusé par l'autre joueur), `joinCircle`.
+5. `endTurn`. Début du tour suivant : encaissement des revenus, paiement des dépenses.
+
+## L'Audit (équivalent original de la prison)
+
+- La case `audit` (« Contrôle fiscal », case 17) envoie directement le pion au coin « Audit / Repos » (case 39, `office: true`), sans passer par le Jour de paie, donc sans salaire. Événement `audit.sent` (montant = index du coin).
+- Le joueur est alors retenu `auditTurns` tours (config, 2 dans tous les modes). Simple passage sur le coin = Repos, sans effet.
+- Au début de chacun de ses tours retenus, il continue d'encaisser ses revenus et de payer ses dépenses, puis choisit :
+  - `payAudit` : il paie la régularisation `auditFee` (config : 90 / 120 / 150 selon le mode), est libéré et lance les dés tout de suite. Possible seulement si son cash couvre la régularisation (il peut vendre ou emprunter avant).
+  - `waitAudit` : il reste sur place (phase libre sans déplacement) ; le compteur baisse d'un. Au dernier tour d'attente, événement `audit.released` : il relance normalement au tour suivant.
+- Pendant la retenue, ses biens rapportent toujours et les visiteurs lui paient toujours le loyer.
+- Robots : ils paient si leur cash après régularisation reste confortable (3 à 8 tours de dépenses selon le niveau) ; le niveau 3 préfère rester quand il reste moins de 4 biens libres à acheter (rester évite alors des loyers).
 
 ## Économie
 
