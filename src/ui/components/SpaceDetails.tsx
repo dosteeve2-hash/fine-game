@@ -96,8 +96,8 @@ export function SpaceDetails({ state, names, index, compact = false }: Props) {
               {ownerIndex >= 0 ? (
                 <>
                   <PawnShape index={ownerIndex} size={13} />
-                  <span>{t("deed.owner", { name: names[ownerIndex] ?? "" })}</span>
-                  <span className="ml-auto font-mono text-[11px]">{t("deed.level", { level })}</span>
+                  <span className="min-w-0 truncate">{t("deed.owner", { name: names[ownerIndex] ?? "" })}</span>
+                  <span className="ml-auto shrink-0 whitespace-nowrap font-mono text-[11px]">{t("deed.level", { level })}</span>
                 </>
               ) : (
                 <span className="text-[#4e5f82]">{t("deed.free")}</span>
