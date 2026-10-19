@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion, useAnimationControls, useReducedMotion } from "framer-motion";
-import { ChevronsUp } from "lucide-react";
+import { ChevronsUp, LocateFixed, Maximize2 } from "lucide-react";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { BoardSpace, GameState } from "../../engine";
 import { ArtIcon } from "../art";
@@ -12,6 +12,7 @@ import { SpaceIcon, iconStroke } from "../icons";
 import { accentFor, cityName, playerColors, withAlpha } from "../theme";
 import type { Stage } from "../useGame";
 import { boardSize, centerRect, pawnPoint, tileRect, type Orientation, type Side, type TileRect } from "./geometry";
+import { MiniMap } from "./MiniMap";
 import { useElementSize } from "./useElementSize";
 
 interface Props {
@@ -19,7 +20,12 @@ interface Props {
   stage: Stage;
   onOpenSpace: (index: number) => void;
   center: (layout: { orientation: Orientation; unit: number; width: number; height: number }) => ReactNode;
+  /** Phone camera: the board is laid out larger and a transform follows the active pawn. */
+  camera?: boolean;
+  hud?: ReactNode;
 }
+
+const cameraSpring = { type: "spring" as const, stiffness: 140, damping: 26, mass: 0.9 };
 
 const sideRotation: Record<Side, number> = { left: 0, top: 90, right: 180, bottom: 270 };
 
@@ -183,7 +189,7 @@ function TrailPuff({ puff, size, onDone }: { puff: Puff; size: number; onDone: (
   );
 }
 
-export function Board({ view, stage, onOpenSpace, center }: Props) {
+export function Board({ view, stage, onOpenSpace, center, camera = false, hud }: Props) {
   const { t } = useI18n();
   const reduced = Boolean(useReducedMotion());
   const chosen = usePawns();
@@ -196,9 +202,14 @@ export function Board({ view, stage, onOpenSpace, center }: Props) {
   const size = boardSize(orientation);
   const fitX = width / size.width;
   const fitY = height / size.height;
-  const ux = width > 0 && height > 0 ? Math.floor(Math.min(fitX, fitY * 1.25) * 10) / 10 : 0;
-  const uy = width > 0 && height > 0 ? Math.floor(Math.min(fitY, fitX * 1.25) * 10) / 10 : 0;
+  const fitUx = width > 0 && height > 0 ? Math.floor(Math.min(fitX, fitY * 1.25) * 10) / 10 : 0;
+  const fitUy = width > 0 && height > 0 ? Math.floor(Math.min(fitY, fitX * 1.25) * 10) / 10 : 0;
+  const fitUnit = Math.min(fitUx, fitUy);
+  const zoom = camera && fitUnit > 0 ? Math.max(2, 64 / fitUnit) : 1;
+  const ux = fitUx * zoom;
+  const uy = fitUy * zoom;
   const unit = Math.min(ux, uy);
+  const [overview, setOverview] = useState(false);
   const boardWidth = ux * size.width;
   const boardHeight = uy * size.height;
   const inner = centerRect(orientation);
@@ -227,9 +238,26 @@ export function Board({ view, stage, onOpenSpace, center }: Props) {
 
   const removePuff = (id: number) => setPuffs(list => list.filter(puff => puff.id !== id));
 
-  return (
-    <div ref={ref} className="relative flex h-full w-full items-center justify-center">
-      {unit > 0 && (
+  const hopping = stage.hop !== null;
+  const bannerKey = stage.banner?.key ?? null;
+  useEffect(() => {
+    if (hopping || bannerKey !== null) setOverview(false);
+  }, [hopping, bannerKey]);
+
+  const followPlayer = stage.hop?.player ?? view.currentPlayerIndex;
+  const followPosition = stage.hop ? stage.hop.position : view.players[followPlayer]?.position ?? 0;
+  const target = pawnPoint(followPosition, followPlayer, orientation, ux, uy);
+  const scale = camera && overview ? 1 / zoom : 1;
+  const place = (size: number, viewport: number, point: number) => {
+    const scaled = size * scale;
+    if (scaled <= viewport) return (viewport - scaled) / 2;
+    return clamp(viewport / 2 - point * scale, viewport - scaled, 0);
+  };
+  const shiftX = camera ? place(boardWidth, width, overview ? boardWidth / 2 : target.x) : 0;
+  const shiftY = camera ? place(boardHeight, height, overview ? boardHeight / 2 : target.y - pawnSize * 0.4) : 0;
+  const frame = { x: -shiftX / scale / ux, y: -shiftY / scale / uy, w: width / scale / ux, h: height / scale / uy };
+
+  const boardLayer = unit > 0 && (
         <motion.div
           className="relative"
           role="group"
@@ -360,6 +388,45 @@ export function Board({ view, stage, onOpenSpace, center }: Props) {
             );
           })}
         </motion.div>
+  );
+
+  if (!camera) {
+    return (
+      <div ref={ref} className="relative flex h-full w-full items-center justify-center">
+        {boardLayer}
+      </div>
+    );
+  }
+
+  return (
+    <div ref={ref} className="relative h-full w-full overflow-hidden" data-camera={overview ? "overview" : "follow"}>
+      <motion.div
+        className="absolute left-0 top-0"
+        style={{ width: boardWidth, height: boardHeight, transformOrigin: "0 0" }}
+        initial={false}
+        animate={{ x: shiftX, y: shiftY, scale }}
+        transition={reduced ? { duration: 0 } : cameraSpring}
+        data-testid="camera"
+      >
+        {boardLayer}
+      </motion.div>
+      {hud}
+      {unit > 0 && !overview && (
+        <div className="absolute bottom-2 left-2 z-20">
+          <MiniMap view={view} orientation={orientation} window={frame} width={46} onPress={() => setOverview(true)} />
+        </div>
+      )}
+      {unit > 0 && (
+        <button
+          type="button"
+          onClick={() => setOverview(value => !value)}
+          aria-pressed={overview}
+          data-testid="camera-toggle"
+          className="absolute bottom-2 right-2 z-20 flex min-h-11 items-center gap-1.5 rounded-full border border-line2 bg-bg/85 px-3.5 text-[13px] font-medium text-text2 shadow-lg backdrop-blur hover:border-gold hover:text-gold2"
+        >
+          {overview ? <LocateFixed size={16} strokeWidth={iconStroke} aria-hidden /> : <Maximize2 size={16} strokeWidth={iconStroke} aria-hidden />}
+          {overview ? t("camera.follow") : t("camera.overview")}
+        </button>
       )}
     </div>
   );

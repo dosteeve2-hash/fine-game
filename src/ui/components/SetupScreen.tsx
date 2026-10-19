@@ -1,18 +1,25 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Bot, Library, Play, RotateCcw, User } from "lucide-react";
-import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Bot, Download, Library, Play, RotateCcw, Share, User, Volume2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import configs from "../../data/config.json";
 import type { GameConfig, GameMode } from "../../engine";
+import { useAudio } from "../audio/AudioProvider";
+import { isAppleTouch } from "../audio/engine";
 import { locales, useI18n, type Locale } from "../i18n";
 import { iconStroke } from "../icons";
+import { useInstallPrompt } from "../install";
+import { useProfile } from "../profile";
 import { playerColors } from "../theme";
 import type { Seat } from "../useGame";
+import { ChapterProgress } from "./ChapterBubble";
 import { CreditsSheet } from "./CreditsSheet";
-import { Fina } from "./Fina";
+import { Logo } from "./Logo";
+import { Mascot } from "./Mascot";
 import { PawnPicker, completePawns } from "./PawnPicker";
 import { PawnShape } from "./Pawn";
+import { SoundControl } from "./SoundControl";
 
 interface Props {
   hasSave: boolean;
@@ -36,6 +43,27 @@ export function SetupScreen({ hasSave, onStart, onResume }: Props) {
   const [picking, setPicking] = useState<Seat[] | null>(null);
   const [creditsOpen, setCreditsOpen] = useState(false);
   const config = allConfigs[mode];
+  const { profile, ready, features, setExpert, seeHint } = useProfile();
+  const { primed, muted } = useAudio();
+  const { available, standalone, install } = useInstallPrompt();
+  const [apple, setApple] = useState(false);
+  const soundHint = ready && !profile.soundHint && !primed && !muted;
+  const iosHint = ready && apple && !standalone && !profile.iosInstallHint && primed && profile.gamesPlayed > 0;
+  const [iosOpen, setIosOpen] = useState(false);
+
+  useEffect(() => {
+    setApple(isAppleTouch());
+  }, []);
+
+  useEffect(() => {
+    if (primed && ready && !profile.soundHint) seeHint("soundHint");
+  }, [primed, ready, profile.soundHint, seeHint]);
+
+  useEffect(() => {
+    if (!iosHint) return;
+    setIosOpen(true);
+    seeHint("iosInstallHint");
+  }, [iosHint, seeHint]);
   const update = (index: number, patch: Partial<Seat>) => setSeats(previous => previous.map((seat, i) => (i === index ? { ...seat, ...patch } : seat)));
 
   const submit = () => {
@@ -53,7 +81,8 @@ export function SetupScreen({ hasSave, onStart, onResume }: Props) {
 
   return (
     <main className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-[max(12px,env(safe-area-inset-top))] lg:flex-row lg:items-center lg:gap-16 lg:px-10">
-      <div className="absolute right-4 top-[max(12px,env(safe-area-inset-top))] z-10 flex gap-1" role="group" aria-label={t("setup.language")}>
+      <div className="absolute right-4 top-[max(12px,env(safe-area-inset-top))] z-10 flex items-center gap-1">
+        <div className="flex gap-1" role="group" aria-label={t("setup.language")}>
         {locales.map((code: Locale) => (
           <button
             key={code}
@@ -65,21 +94,25 @@ export function SetupScreen({ hasSave, onStart, onResume }: Props) {
             {code}
           </button>
         ))}
+        </div>
+        <SoundControl />
       </div>
 
-      <header className="flex flex-col items-center pt-8 text-center lg:flex-1 lg:items-start lg:pt-0 lg:text-left">
+      <header className="flex flex-col items-center pt-14 text-center lg:flex-1 lg:items-start lg:pt-0 lg:text-left">
         <motion.div initial={{ scale: 0.6, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 160, damping: 14 }} className="lg:hidden">
-          <Fina size={96} mood="happy" label={t("fina.label")} />
+          <Mascot size={96} mood="happy" label={t("fina.label")} />
         </motion.div>
         <motion.div initial={{ scale: 0.6, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 160, damping: 14 }} className="hidden lg:block">
-          <Fina size={200} mood="happy" label={t("fina.label")} />
+          <Mascot size={200} mood="happy" label={t("fina.label")} />
         </motion.div>
-        <motion.h1 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="mt-2 font-serif text-6xl font-black italic leading-none text-gold lg:mt-6 lg:text-[120px]">
-          FINE
-        </motion.h1>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="mt-2 lg:mt-6">
+          <h1 className="sr-only">FINE</h1>
+          <Logo size={60} className="lg:hidden" />
+          <Logo size={120} className="hidden lg:inline" />
+        </motion.div>
         <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.28em] text-text3 lg:text-xs">{t("setup.subtitle")}</p>
         <p className="mt-2 font-serif text-lg italic text-text2 lg:mt-4 lg:text-3xl">{t("app.tagline")}</p>
-        <p className="mt-6 hidden max-w-md text-sm leading-relaxed text-text2 lg:block">{t("setup.goal", { target: config.freedomTarget, turns: config.freedomTurns })}</p>
+        <p className="mt-6 hidden max-w-md text-sm leading-relaxed text-text2 lg:block">{t("setup.goal")}</p>
       </header>
 
       <motion.section
@@ -176,7 +209,24 @@ export function SetupScreen({ hasSave, onStart, onResume }: Props) {
           </div>
         </div>
 
-        <p className="text-xs leading-relaxed text-text3 lg:hidden">{t("setup.goal", { target: config.freedomTarget, turns: config.freedomTurns })}</p>
+        <p className="text-xs leading-relaxed text-text3 lg:hidden">{t("setup.goal")}</p>
+
+        {ready && (
+          <div className="rounded-2xl border border-line2 bg-bg3/70 px-3 py-2.5">
+            <ChapterProgress chapter={features.chapter} />
+            <label className="mt-2 flex min-h-11 cursor-pointer items-center justify-between gap-3">
+              <span className="text-sm text-text2">{t("chapter.expert")}</span>
+              <input
+                type="checkbox"
+                role="switch"
+                checked={profile.expert}
+                onChange={event => setExpert(event.target.checked)}
+                data-testid="expert-toggle"
+                className="h-6 w-11 shrink-0 cursor-pointer appearance-none rounded-full bg-line2 transition-colors before:block before:h-5 before:w-5 before:translate-x-0.5 before:translate-y-0.5 before:rounded-full before:bg-text2 before:transition-transform checked:bg-gold checked:before:translate-x-[22px] checked:before:bg-bg"
+              />
+            </label>
+          </div>
+        )}
 
         <motion.button
           type="button"
@@ -188,6 +238,17 @@ export function SetupScreen({ hasSave, onStart, onResume }: Props) {
           <Play size={20} strokeWidth={2.2} fill="currentColor" aria-hidden />
           {t("setup.start")}
         </motion.button>
+        {available && !standalone && (
+          <button
+            type="button"
+            onClick={() => void install()}
+            data-testid="install-button"
+            className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-line2 bg-bg3 px-4 text-sm font-medium text-text hover:border-gold hover:text-gold2"
+          >
+            <Download size={17} strokeWidth={iconStroke} aria-hidden />
+            {t("install.button")}
+          </button>
+        )}
         <button
           type="button"
           onClick={() => setCreditsOpen(true)}
@@ -198,6 +259,43 @@ export function SetupScreen({ hasSave, onStart, onResume }: Props) {
         </button>
       </motion.section>
       <CreditsSheet open={creditsOpen} onClose={() => setCreditsOpen(false)} />
+      <AnimatePresence>
+        {soundHint && (
+          <motion.p
+            key="sound"
+            className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+14px)] z-40 mx-auto flex w-max max-w-[90vw] items-center gap-2 rounded-full border border-line2 bg-bg2/95 px-4 py-2 text-[13px] text-text2 shadow-xl backdrop-blur"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0, transition: { delay: 0.8 } }}
+            exit={{ opacity: 0, y: 8, transition: { duration: 0.15 } }}
+            data-testid="sound-hint"
+          >
+            <Volume2 size={15} strokeWidth={iconStroke} className="text-gold2" aria-hidden />
+            {t("audio.tapToEnable")}
+          </motion.p>
+        )}
+        {iosOpen && (
+          <motion.div
+            key="ios"
+            role="dialog"
+            aria-label={t("install.iosTitle")}
+            className="fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+12px)] z-40 mx-auto max-w-sm rounded-3xl border border-line2 bg-bg2/97 p-4 shadow-2xl backdrop-blur"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0, transition: { delay: 1.2, type: "spring", stiffness: 240, damping: 26 } }}
+            exit={{ opacity: 0, y: 16, transition: { duration: 0.15 } }}
+            data-testid="ios-install"
+          >
+            <p className="font-serif text-lg font-bold italic text-text">{t("install.iosTitle")}</p>
+            <p className="mt-1 flex flex-wrap items-center gap-1 text-sm leading-snug text-text2">
+              {t("install.iosStep1")}
+              <Share size={16} strokeWidth={iconStroke} className="text-cyan" aria-hidden />
+              {t("install.iosStep2")}
+            </p>
+            <button type="button" onClick={() => setIosOpen(false)} className="mt-3 flex min-h-11 w-full items-center justify-center rounded-2xl border border-line2 bg-bg3 text-sm text-text hover:border-gold">
+              {t("install.later")}
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }

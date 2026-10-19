@@ -7,6 +7,7 @@ import type { Action, GameState } from "../../engine";
 import { ArtIcon } from "../art";
 import { useI18n } from "../i18n";
 import { iconStroke } from "../icons";
+import type { Features } from "../profile";
 
 export interface Choice {
   key: string;
@@ -21,7 +22,7 @@ export interface ActionModel {
   secondary: Choice[];
 }
 
-export function useActionModel(state: GameState): ActionModel {
+export function useActionModel(state: GameState, features: Features): ActionModel {
   const { t, money } = useI18n();
   const player = state.players[state.currentPlayerIndex];
   if (!player || state.phase === "finished") return { primary: null, secondary: [] };
@@ -43,7 +44,7 @@ export function useActionModel(state: GameState): ActionModel {
     if (primary) secondary.push(stayChoice);
     else primary = stayChoice;
   } else if (buy) primary = { key: "buy", label: t("game.buy", { price: money(buyPrice(state)) }), icon: Store, action: buy };
-  if (!roll && join) secondary.push({ key: "circle", label: t("game.joinCircle"), icon: "handshake", action: join });
+  if (!roll && join && (features.circle || player.isBot)) secondary.push({ key: "circle", label: t("game.joinCircle"), icon: "handshake", action: join });
   if (end) {
     const endChoice: Choice = { key: "end", label: t("game.endTurn"), icon: ArrowUpRight, action: end };
     if (primary) secondary.push(endChoice);

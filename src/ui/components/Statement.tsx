@@ -1,11 +1,8 @@
 "use client";
 
-import { AnimatePresence, motion, useDragControls, useReducedMotion } from "framer-motion";
-import { GripHorizontal, Receipt, X } from "lucide-react";
 import { salaryPreview } from "../../engine";
 import type { GameState } from "../../engine";
 import { useI18n } from "../i18n";
-import { iconStroke } from "../icons";
 import type { MessageKey } from "../messages/fr";
 import { playerColors } from "../theme";
 import { useText } from "../text";
@@ -131,70 +128,5 @@ export function StatementView({ statement, state, names }: { statement: Statemen
 
       <p className="text-[12px] leading-snug text-text3">{salaryLine}</p>
     </div>
-  );
-}
-
-interface CardProps {
-  statement: StatementRecord | null;
-  state: GameState;
-  names: string[];
-  variant: "sheet" | "side";
-  onClose: () => void;
-}
-
-export function StatementCard({ statement, state, names, variant, onClose }: CardProps) {
-  const { t } = useI18n();
-  const reduced = Boolean(useReducedMotion());
-  const controls = useDragControls();
-  const sheet = variant === "sheet";
-  const shift = reduced ? 0 : 1;
-
-  return (
-    <AnimatePresence>
-      {statement && (
-        <motion.section
-          key={statement.id}
-          role="region"
-          aria-label={t("statement.title")}
-          initial={sheet ? { y: 90 * shift, opacity: 0 } : { x: 48 * shift, opacity: 0 }}
-          animate={{ x: 0, y: 0, opacity: 1 }}
-          exit={sheet ? { y: 90 * shift, opacity: 0 } : { x: 48 * shift, opacity: 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          drag={sheet ? "y" : false}
-          dragListener={false}
-          dragControls={controls}
-          dragConstraints={{ top: 0, bottom: 0 }}
-          dragElastic={{ top: 0, bottom: 0.7 }}
-          onDragEnd={(_, info) => {
-            if (info.offset.y > 60 || info.velocity.y > 500) onClose();
-          }}
-          className={
-            sheet
-              ? "pointer-events-auto absolute inset-x-1 bottom-1 z-30 flex max-h-[68%] flex-col rounded-2xl border border-line2 bg-bg2/97 shadow-[0_-12px_40px_-12px_rgba(0,0,0,0.85)] backdrop-blur lg:hidden"
-              : "pointer-events-auto absolute inset-0 z-20 hidden flex-col rounded-2xl border border-line2 bg-bg2 shadow-2xl lg:flex"
-          }
-        >
-          {sheet && (
-            <div className="flex shrink-0 cursor-grab touch-none items-center justify-center pt-1.5 active:cursor-grabbing" onPointerDown={event => controls.start(event)} aria-hidden>
-              <GripHorizontal size={22} strokeWidth={iconStroke} className="text-line2" />
-            </div>
-          )}
-          <div className="flex min-h-0 flex-1 flex-col px-3 pb-3 pt-1">
-            <div className="mb-1 flex shrink-0 items-center justify-between">
-              <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-text3">
-                <Receipt size={12} strokeWidth={iconStroke} aria-hidden />
-                {t("statement.title")}
-              </span>
-              <button type="button" onClick={onClose} aria-label={t("statement.close")} className="-mr-1 flex h-11 w-11 items-center justify-center rounded-xl text-text2 hover:bg-bg3 hover:text-text">
-                <X size={19} strokeWidth={iconStroke} />
-              </button>
-            </div>
-            <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-              <StatementView statement={statement} state={state} names={names} />
-            </div>
-          </div>
-        </motion.section>
-      )}
-    </AnimatePresence>
   );
 }

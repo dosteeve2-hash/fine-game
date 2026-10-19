@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Lightbulb, ShieldCheck } from "lucide-react";
+import { Info, Lightbulb, ShieldCheck, X } from "lucide-react";
 import { ArtIcon } from "../art";
 import { useEffect, useState } from "react";
 import type { GameState } from "../../engine";
@@ -48,10 +48,12 @@ export function CardReveal({ card, state, names, onClose }: Props) {
   const { t, d, money, effectLine } = useText();
   const reduced = Boolean(useReducedMotion());
   const [flipped, setFlipped] = useState(false);
+  const [info, setInfo] = useState(false);
 
   useEffect(() => {
     if (!card) return;
     setFlipped(false);
+    setInfo(false);
     const timer = window.setTimeout(() => {
       setFlipped(true);
       audio.play(card.deck === "opportunity" ? "cardOpportunity" : card.amount < 0 ? "cardEvent" : "cardFlip");
@@ -107,10 +109,9 @@ export function CardReveal({ card, state, names, onClose }: Props) {
                 </div>
                 <div className="relative flex flex-1 flex-col overflow-hidden px-5 pb-4 pt-4">
                   <ArtIcon name={deckArt} size={190} color={tone} className="pointer-events-none absolute -right-10 top-24 opacity-[0.12]" />
-                  <h2 className="font-serif text-[26px] font-black italic leading-[1.05]">{d(`${prefix}.title`)}</h2>
-                  <p className="mt-2 text-[15px] leading-snug text-[#30405f]">{d(`${prefix}.text`)}</p>
+                  <h2 className="font-serif text-[28px] font-black italic leading-[1.05]">{d(`${prefix}.title`)}</h2>
                   {card.amount !== 0 && found?.card.effect.type === "cash" && (
-                    <div className={`mt-3 self-start rounded-xl px-3 py-1.5 font-mono text-2xl font-semibold ${card.amount > 0 ? "bg-[#3cc48e]/20 text-[#17704a]" : "bg-[#e2706b]/15 text-[#a3352f]"}`}>
+                    <div className={`mt-4 self-start rounded-xl px-3 py-1.5 font-mono text-3xl font-semibold ${card.amount > 0 ? "bg-[#3cc48e]/20 text-[#17704a]" : "bg-[#e2706b]/15 text-[#a3352f]"}`}>
                       {card.amount > 0 ? "+" : "−"}
                       {money(Math.abs(card.amount))}
                     </div>
@@ -122,12 +123,45 @@ export function CardReveal({ card, state, names, onClose }: Props) {
                       {t("card.insured", { amount: money(saved) })}
                     </div>
                   )}
-                  <div className="relative mt-auto rounded-2xl border border-[#c07d10]/30 bg-[#fff8e6] p-3">
-                    <div className="flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#c07d10]">
-                      <Lightbulb size={14} strokeWidth={iconStroke} aria-hidden />
-                      {t("card.realLife")}
-                    </div>
-                    <p className="mt-1 text-[13px] leading-snug text-[#30405f]">{d(`${prefix}.tip`)}</p>
+                  <div className="relative mt-auto">
+                    <AnimatePresence initial={false} mode="wait">
+                      {info ? (
+                        <motion.div
+                          key="tip"
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 8 }}
+                          transition={{ duration: 0.18 }}
+                          className="rounded-2xl border border-[#c07d10]/30 bg-[#fff8e6] p-3"
+                          data-testid="card-tip"
+                        >
+                          <div className="flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#c07d10]">
+                            <Lightbulb size={14} strokeWidth={iconStroke} aria-hidden />
+                            {t("card.realLife")}
+                            <button type="button" onClick={() => setInfo(false)} aria-label={t("card.infoClose")} className="-my-2 -mr-2 ml-auto flex h-9 w-9 items-center justify-center rounded-lg text-[#c07d10]">
+                              <X size={15} strokeWidth={iconStroke} aria-hidden />
+                            </button>
+                          </div>
+                          <p className="mt-0.5 text-[13px] leading-snug text-[#30405f]">{d(`${prefix}.text`)}</p>
+                          <p className="mt-1 text-[13px] leading-snug text-[#30405f]">{d(`${prefix}.tip`)}</p>
+                        </motion.div>
+                      ) : (
+                        <motion.button
+                          key="info"
+                          type="button"
+                          onClick={() => setInfo(true)}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          aria-label={t("card.info")}
+                          aria-expanded={false}
+                          data-testid="card-info"
+                          className="flex h-11 w-11 items-center justify-center rounded-full border border-[#c07d10]/40 bg-[#fff8e6] text-[#c07d10]"
+                        >
+                          <Info size={20} strokeWidth={iconStroke} aria-hidden />
+                        </motion.button>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
               </div>
@@ -142,7 +176,7 @@ export function CardReveal({ card, state, names, onClose }: Props) {
               className="absolute -bottom-16 left-1/2 flex min-h-12 min-w-44 -translate-x-1/2 items-center justify-center overflow-hidden rounded-2xl bg-gold px-6 font-medium text-bg shadow-[0_10px_30px_-10px_rgba(240,168,50,0.7)]"
             >
               {card.auto && !reduced && (
-                <motion.span className="absolute inset-y-0 left-0 bg-gold2" initial={{ width: "0%" }} animate={{ width: "100%" }} transition={{ duration: 4.2, ease: "linear" }} aria-hidden />
+                <motion.span className="absolute inset-y-0 left-0 bg-gold2" initial={{ width: "0%" }} animate={{ width: "100%" }} transition={{ duration: 2.8, ease: "linear" }} aria-hidden />
               )}
               <span className="relative">{t("card.continue")}</span>
             </motion.button>

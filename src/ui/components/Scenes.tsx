@@ -3,7 +3,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { ReactNode } from "react";
 import type { GameState } from "../../engine";
-import { ArtIcon } from "../art";
+import { ArtIcon, type ArtName } from "../art";
 import type { MessageKey } from "../messages/fr";
 import { useText } from "../text";
 import type { SceneKind, SceneShow } from "../useGame";
@@ -15,6 +15,17 @@ interface Props {
   names: string[];
   onClose: () => void;
 }
+
+const stills: Record<SceneKind, ArtName> = {
+  salary: "noto:sunrise",
+  tax: "noto:balance-scale",
+  bank: "noto:bank",
+  circle: "fluent-emoji-flat:handshake",
+  rest: "noto:camping",
+  audit: "game-icons:gavel",
+  auditExit: "game-icons:exit-door",
+  restart: "game-icons:sun"
+};
 
 const tones: Record<SceneKind, string> = {
   salary: "#f0a832",
@@ -179,10 +190,53 @@ function Picture({ kind, size, reduced }: { kind: SceneKind; size: number; reduc
   );
 }
 
+function sceneLine(scene: SceneShow, money: (amount: number) => string): string | null {
+  if (scene.amount === undefined || scene.amount === 0) return null;
+  const sign = scene.kind === "tax" || scene.kind === "audit" ? "−" : "+";
+  return `${sign}${money(Math.abs(scene.amount))}`;
+}
+
 export function Scenes({ scene, state, names, onClose }: Props) {
   const { t, money } = useText();
   const reduced = Boolean(useReducedMotion());
   const size = 168;
+
+  if (scene && scene.variant !== "full") {
+    const line = scene.variant === "locked" && scene.chapter
+      ? t("chapter.later", { n: scene.chapter, title: t(`chapter.${scene.chapter}.title` as MessageKey) })
+      : sceneLine(scene, money);
+    return (
+      <AnimatePresence>
+        <motion.div
+          key={scene.id}
+          className="pointer-events-none fixed inset-x-0 top-[calc(env(safe-area-inset-top)+96px)] z-[55] flex justify-center px-4 lg:top-10"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.16 }}
+          role="status"
+          aria-live="polite"
+          data-scene={scene.kind}
+          data-variant={scene.variant}
+        >
+          <button
+            type="button"
+            onClick={onClose}
+            className="pointer-events-auto flex max-w-sm items-center gap-3 rounded-2xl border bg-bg2/95 px-3.5 py-2.5 text-left shadow-[0_18px_50px_-16px_rgba(0,0,0,0.9)] backdrop-blur"
+            style={{ borderColor: tones[scene.kind] }}
+          >
+            <ArtIcon name={stills[scene.kind]} size={34} color={tones[scene.kind]} />
+            <span className="min-w-0">
+              <span className="block font-serif text-lg font-black italic leading-tight" style={{ color: tones[scene.kind] }}>
+                {t(`scene.${scene.kind}.title` as MessageKey)}
+              </span>
+              {line && <span className={`block text-[13px] leading-snug ${scene.variant === "locked" ? "text-text2" : "font-mono font-semibold text-text"}`}>{line}</span>}
+            </span>
+          </button>
+        </motion.div>
+      </AnimatePresence>
+    );
+  }
 
   return (
     <AnimatePresence>

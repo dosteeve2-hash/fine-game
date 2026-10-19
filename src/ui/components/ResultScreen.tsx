@@ -2,7 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { House, RotateCcw } from "lucide-react";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { playerSummary } from "../../engine";
 import type { GameState } from "../../engine";
 import { audio } from "../audio/engine";
@@ -10,13 +10,17 @@ import { useI18n } from "../i18n";
 import { iconStroke } from "../icons";
 import { playerColors } from "../theme";
 import { ArtIcon } from "../art";
-import { Fina } from "./Fina";
+import type { MessageKey } from "../messages/fr";
+import { chapterCount, useProfile, type Finished } from "../profile";
+import { ChapterProgress } from "./ChapterBubble";
+import { Mascot } from "./Mascot";
 import { PawnShape, PawnsProvider } from "./Pawn";
 
 interface Props {
   state: GameState;
   names: string[];
   pawns: string[];
+  gameId: number;
   onReplay: () => void;
   onHome: () => void;
 }
@@ -50,7 +54,7 @@ function Confetti() {
   );
 }
 
-export function ResultScreen({ state, names, pawns, onReplay, onHome }: Props) {
+export function ResultScreen({ state, names, pawns, gameId, onReplay, onHome }: Props) {
   const { t, money } = useI18n();
   const winnerIndex = state.players.findIndex(player => player.id === state.winner);
   const winnerName = names[winnerIndex] ?? "";
@@ -60,18 +64,29 @@ export function ResultScreen({ state, names, pawns, onReplay, onHome }: Props) {
   const rounds = Math.floor(state.turn / state.players.length) + 1;
   const freedom = state.endReason === "freedom";
 
+  const { ready, finishGame } = useProfile();
+  const [finished, setFinished] = useState<Finished | null>(null);
+  const counted = useRef(false);
+  const hasHuman = state.players.some(player => !player.isBot);
+
   useEffect(() => {
     const timer = window.setTimeout(() => audio.play("victory"), 250);
     return () => window.clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    if (!ready || counted.current || !hasHuman) return;
+    counted.current = true;
+    setFinished(finishGame(gameId));
+  }, [ready, hasHuman, finishGame, gameId]);
+
   return (
     <PawnsProvider pawns={pawns}>
-    <main className="relative mx-auto flex min-h-dvh w-full max-w-5xl flex-col items-center justify-center gap-6 px-4 py-8 text-center lg:flex-row lg:gap-16 lg:text-left">
+    <main data-testid="result-screen" className="relative mx-auto flex min-h-dvh w-full max-w-5xl flex-col items-center justify-center gap-6 px-4 py-8 text-center lg:flex-row lg:gap-16 lg:text-left">
       <Confetti />
       <motion.div className="flex flex-col items-center lg:flex-1 lg:items-start" initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 120, damping: 12 }}>
         <div className="flex items-end gap-3">
-          <Fina mood="celebrate" size={150} label={t("fina.label")} />
+          <Mascot mood="celebrate" size={150} label={t("fina.label")} />
           <ArtIcon name="game-icons:laurels-trophy" size={72} color="#f0a832" />
         </div>
         <h1 className="mt-4 font-serif text-5xl font-black italic leading-none text-gold lg:text-7xl">{freedom ? t("result.freedomTitle") : t("result.limitTitle")}</h1>
@@ -80,6 +95,25 @@ export function ResultScreen({ state, names, pawns, onReplay, onHome }: Props) {
           {freedom ? t("result.freedom", { name: winnerName }) : t("result.turnLimit", { name: winnerName })}
         </p>
         <p className="mt-1 font-mono text-xs uppercase tracking-[0.2em] text-text3">{t("result.turns", { n: rounds })}</p>
+        {finished && (
+          <motion.div
+            className="mt-5 w-full max-w-sm rounded-2xl border border-gold/50 bg-bg2/90 p-3.5 text-left"
+            initial={{ opacity: 0, y: 14, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 0.6, type: "spring", stiffness: 200, damping: 20 }}
+            data-testid="chapter-reward"
+          >
+            <ChapterProgress chapter={finished.unlocked} />
+            <p className="mt-2 font-serif text-xl font-black italic leading-tight text-gold">{t("chapter.done", { n: finished.completed })}</p>
+            <p className="mt-1 text-sm leading-snug text-text2">
+              {finished.unlocked > finished.completed
+                ? t("chapter.next", { n: finished.unlocked, title: t(`chapter.${finished.unlocked}.title` as MessageKey) })
+                : finished.completed >= chapterCount
+                  ? t("chapter.allOpen")
+                  : t("chapter.again")}
+            </p>
+          </motion.div>
+        )}
       </motion.div>
 
       <motion.section

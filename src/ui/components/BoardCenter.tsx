@@ -10,7 +10,8 @@ import { iconStroke } from "../icons";
 import { playerColors, withAlpha } from "../theme";
 import type { Stage } from "../useGame";
 import { Dice } from "./Dice";
-import { Fina } from "./Fina";
+import { Logo } from "./Logo";
+import { Mascot } from "./Mascot";
 import { PawnShape } from "./Pawn";
 import { SpaceDetails } from "./SpaceDetails";
 
@@ -20,13 +21,75 @@ interface Props {
   names: string[];
   thinking: boolean;
   layout: { orientation: Orientation; unit: number; width: number; height: number };
+  /** Banner and dice are drawn by the phone camera overlay instead of the board centre. */
+  external?: boolean;
 }
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-export function BoardCenter({ view, stage, names, thinking, layout }: Props) {
+export function DiceTray({ stage, size }: { stage: Stage; size: number }) {
+  const { t } = useI18n();
+  return (
+    <div style={{ height: size * 1.15 }} className="flex items-center justify-center">
+      <AnimatePresence mode="wait">
+        {stage.dice ? (
+          <motion.div key="dice" initial={{ opacity: 0, scale: 0.6, y: -20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
+            <Dice values={stage.dice.values} rolling={stage.dice.rolling} size={size} label={stage.dice.rolling ? t("game.rolling") : `${stage.dice.values[0]} + ${stage.dice.values[1]}`} />
+          </motion.div>
+        ) : (
+          <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 0.35 }} exit={{ opacity: 0 }}>
+            <Dice values={[5, 2]} rolling={false} size={size * 0.8} label="" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+export function TurnBanner({ stage, names, round, className = "pointer-events-none absolute inset-x-3 top-3 z-10 flex justify-center" }: { stage: Stage; names: string[]; round: number; className?: string }) {
+  const { t } = useI18n();
+  return (
+    <AnimatePresence>
+      {stage.banner && (
+        <motion.div
+          key={stage.banner.key}
+          className={className}
+          initial={{ opacity: 0, y: -24, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -12 }}
+          transition={{ type: "spring", stiffness: 260, damping: 22 }}
+        >
+          <div
+            className="flex max-w-full items-center gap-3 rounded-2xl border bg-bg px-4 py-2.5 shadow-2xl"
+            style={{
+              borderColor: stage.banner.human ? "#f0a832" : "#2a3b5e",
+              boxShadow: stage.banner.human ? "0 0 0 1px rgba(240,168,50,0.5), 0 18px 50px -16px rgba(240,168,50,0.55)" : undefined
+            }}
+          >
+            <PawnShape index={stage.banner.player} size={24} active />
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-text3">
+                {stage.banner.human ? t("game.round", { n: round }) : (
+                  <>
+                    <Eye size={11} strokeWidth={iconStroke} aria-hidden />
+                    {t("spectator.label")}
+                  </>
+                )}
+              </div>
+              <div className={`truncate font-serif font-black italic leading-tight ${stage.banner.human ? "text-xl text-gold lg:text-3xl" : "text-lg text-text lg:text-2xl"}`}>
+                {stage.banner.human ? t("turn.you", { name: names[stage.banner.player] ?? "" }) : t("game.turnOf", { name: names[stage.banner.player] ?? "" })}
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+export function BoardCenter({ view, stage, names, thinking, layout, external = false }: Props) {
   const { t, money } = useI18n();
   const current = view.currentPlayerIndex;
   const player = view.players[current];
@@ -65,70 +128,17 @@ export function BoardCenter({ view, stage, names, thinking, layout }: Props) {
     </div>
   ) : null;
 
-  const dice = (
-    <div style={{ height: diceSize * 1.15 }} className="flex items-center justify-center">
-      <AnimatePresence mode="wait">
-        {stage.dice ? (
-          <motion.div key="dice" initial={{ opacity: 0, scale: 0.6, y: -20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
-            <Dice values={stage.dice.values} rolling={stage.dice.rolling} size={diceSize} label={stage.dice.rolling ? t("game.rolling") : `${stage.dice.values[0]} + ${stage.dice.values[1]}`} />
-          </motion.div>
-        ) : (
-          <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 0.35 }} exit={{ opacity: 0 }}>
-            <Dice values={[5, 2]} rolling={false} size={diceSize * 0.8} label="" />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-
-  const banner = (
-    <AnimatePresence>
-      {stage.banner && (
-        <motion.div
-          key={stage.banner.key}
-          className="pointer-events-none absolute inset-x-3 top-3 z-10 flex justify-center"
-          initial={{ opacity: 0, y: -24, scale: 0.9 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -12 }}
-          transition={{ type: "spring", stiffness: 260, damping: 22 }}
-        >
-          <div
-            className="flex max-w-full items-center gap-3 rounded-2xl border bg-bg px-4 py-2.5 shadow-2xl"
-            style={{
-              borderColor: stage.banner.human ? "#f0a832" : "#2a3b5e",
-              boxShadow: stage.banner.human ? "0 0 0 1px rgba(240,168,50,0.5), 0 18px 50px -16px rgba(240,168,50,0.55)" : undefined
-            }}
-          >
-            <PawnShape index={stage.banner.player} size={24} active />
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-text3">
-                {stage.banner.human ? t("game.round", { n: round }) : (
-                  <>
-                    <Eye size={11} strokeWidth={iconStroke} aria-hidden />
-                    {t("spectator.label")}
-                  </>
-                )}
-              </div>
-              <div className={`truncate font-serif font-black italic leading-tight ${stage.banner.human ? "text-xl text-gold lg:text-3xl" : "text-lg text-text lg:text-2xl"}`}>
-                {stage.banner.human ? t("turn.you", { name: names[stage.banner.player] ?? "" }) : t("game.turnOf", { name: names[stage.banner.player] ?? "" })}
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
+  const dice = external ? null : <DiceTray stage={stage} size={diceSize} />;
+  const banner = external ? null : <TurnBanner stage={stage} names={names} round={round} />;
 
   if (landscape) {
     return (
       <div className="relative flex h-full w-full items-center justify-between gap-4 px-[6%]">
         {banner}
         <div className="flex min-w-0 flex-col items-center gap-2">
-          <div className="font-serif font-black italic leading-none text-gold" style={{ fontSize: clamp(layout.unit * 0.9, 28, 76) }}>
-            FINE
-          </div>
+          <Logo size={clamp(layout.unit * 0.9, 28, 76)} as="div" />
           <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-text3">{t("game.round", { n: round })}</div>
-          <Fina mood={stage.mood} size={finaSize} label={t("fina.label")} />
+          <Mascot mood={stage.mood} size={finaSize} label={t("fina.label")} />
         </div>
         <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-4">
           {pill}
@@ -143,7 +153,7 @@ export function BoardCenter({ view, stage, names, thinking, layout }: Props) {
     <div className="relative flex h-full w-full flex-col items-center gap-2 px-2 py-3">
       {banner}
       {pill}
-      <Fina mood={stage.mood} size={finaSize} label={t("fina.label")} />
+      <Mascot mood={stage.mood} size={finaSize} label={t("fina.label")} />
       {dice}
       {circle}
       {showDeed && stage.focus !== null && (

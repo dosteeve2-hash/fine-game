@@ -7,6 +7,7 @@ import { GameScreen } from "./components/GameScreen";
 import { ResultScreen } from "./components/ResultScreen";
 import { SetupScreen } from "./components/SetupScreen";
 import { I18nProvider } from "./i18n";
+import { ProfileProvider } from "./profile";
 import { useGame, type Seat } from "./useGame";
 
 function Screens() {
@@ -28,6 +29,7 @@ function Screens() {
             state={game.view}
             names={game.names}
             pawns={game.pawns}
+            gameId={game.gameId}
             onHome={game.discard}
             onReplay={() => {
               if (last.current) game.start(last.current.config, last.current.seats);
@@ -64,7 +66,9 @@ export function GameApp() {
   return (
     <I18nProvider>
       <AudioProvider>
-        <Screens />
+        <ProfileProvider>
+          <Screens />
+        </ProfileProvider>
       </AudioProvider>
     </I18nProvider>
   );

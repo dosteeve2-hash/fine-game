@@ -1,11 +1,14 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { audio, type AudioSettings, type Sfx } from "./engine";
+import { audio, type AudioSettings, type AudioStatus, type Sfx } from "./engine";
 
 interface AudioValue extends AudioSettings {
+  status: AudioStatus;
+  primed: boolean;
   unlock: () => void;
   play: (name: Sfx) => void;
+  test: () => Promise<AudioStatus>;
   toggleMute: () => void;
   toggleMusic: () => void;
   setVolume: (volume: number) => void;
@@ -17,21 +20,32 @@ const AudioContextValue = createContext<AudioValue | null>(null);
 
 export function AudioProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AudioSettings>(audio.settings);
+  const [status, setStatus] = useState<AudioStatus>("locked");
+  const [primed, setPrimed] = useState(false);
 
   useEffect(() => {
     setSettings(audio.load());
+    audio.listen();
+    const refresh = () => {
+      setStatus(audio.status());
+      setPrimed(audio.hasPrimed());
+      setSettings(audio.settings);
+    };
+    refresh();
+    return audio.subscribe(refresh);
   }, []);
 
   const unlock = useCallback(() => audio.unlock(), []);
   const play = useCallback((name: Sfx) => audio.play(name), []);
+  const test = useCallback(() => audio.test(), []);
   const toggleMute = useCallback(() => {
     const next = audio.update({ muted: !audio.settings.muted });
-    audio.unlock();
+    audio.prime();
     setSettings(next);
   }, []);
   const toggleMusic = useCallback(() => {
     const next = audio.update({ music: !audio.settings.music });
-    audio.unlock();
+    audio.prime();
     setSettings(next);
   }, []);
   const setVolume = useCallback((volume: number) => {
@@ -45,8 +59,8 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AudioValue>(
-    () => ({ ...settings, unlock, play, toggleMute, toggleMusic, setVolume, setMusicVolume, setSfxVolume }),
-    [settings, unlock, play, toggleMute, toggleMusic, setVolume, setMusicVolume, setSfxVolume]
+    () => ({ ...settings, status, primed, unlock, play, test, toggleMute, toggleMusic, setVolume, setMusicVolume, setSfxVolume }),
+    [settings, status, primed, unlock, play, test, toggleMute, toggleMusic, setVolume, setMusicVolume, setSfxVolume]
   );
 
   return <AudioContextValue.Provider value={value}>{children}</AudioContextValue.Provider>;

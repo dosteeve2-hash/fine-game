@@ -27,6 +27,25 @@ body {
   font-family: var(--font-sans);
   min-height: 100dvh;
   -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+html {
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 ::selection {

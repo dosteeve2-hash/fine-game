@@ -1,16 +1,23 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Music, Volume2, VolumeX } from "lucide-react";
+import { BellRing, Music, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAudio } from "../audio/AudioProvider";
+import { isAppleTouch, type AudioStatus } from "../audio/engine";
 import { useI18n } from "../i18n";
 import { iconStroke } from "../icons";
 
 export function SoundControl() {
   const { t } = useI18n();
-  const { muted, music, volume, musicVolume, sfxVolume, toggleMute, toggleMusic, setVolume, setMusicVolume, setSfxVolume } = useAudio();
+  const { muted, music, volume, musicVolume, sfxVolume, status, test, toggleMute, toggleMusic, setVolume, setMusicVolume, setSfxVolume } = useAudio();
   const [open, setOpen] = useState(false);
+  const [tested, setTested] = useState<AudioStatus | null>(null);
+  const shown = tested ?? status;
+  const runTest = () => {
+    setTested(null);
+    void test().then(setTested);
+  };
   const root = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -41,10 +48,27 @@ export function SoundControl() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.97 }}
             transition={{ duration: 0.16 }}
-            className="absolute right-0 top-12 z-50 w-64 rounded-2xl border border-line2 bg-bg2 p-3 shadow-2xl"
+            className="absolute right-0 top-12 z-50 w-[min(16rem,calc(100vw-2rem))] rounded-2xl border border-line2 bg-bg2 p-3 shadow-2xl"
             role="dialog"
             aria-label={t("audio.settings")}
           >
+            <button
+              type="button"
+              onClick={runTest}
+              data-testid="sound-test"
+              className="mb-2 flex min-h-11 w-full items-center gap-2 rounded-xl border border-gold/50 px-3 text-sm font-medium text-gold2 hover:bg-gold/10"
+            >
+              <BellRing size={18} strokeWidth={iconStroke} aria-hidden />
+              {t("audio.test")}
+              <span data-testid="sound-status" className={`ml-auto font-mono text-[11px] ${shown === "ready" ? "text-green" : "text-text3"}`}>
+                {t(`audio.status.${shown}`)}
+              </span>
+            </button>
+            {tested !== null && tested !== "unsupported" && (
+              <p className="mb-2 px-1 text-[12px] leading-snug text-text2" aria-live="polite">
+                {tested === "ready" ? (isAppleTouch() ? t("audio.tipSilent") : t("audio.tipVolume")) : t("audio.tipLocked")}
+              </p>
+            )}
             <button
               type="button"
               onClick={toggleMute}

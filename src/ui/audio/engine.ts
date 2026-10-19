@@ -22,7 +22,10 @@ export type Sfx =
   | "auditSlam"
   | "auditWait"
   | "statement"
+  | "test"
   | `scene.${SceneSound}`;
+
+export type AudioStatus = "ready" | "locked" | "muted" | "unsupported";
 
 export type SceneSound = "salary" | "tax" | "bank" | "circle" | "rest" | "audit" | "auditExit" | "restart";
 export type StepKind = "chuff" | "splash" | "prop" | "flame" | "hoof" | "roll" | "clank" | "pad" | "coin" | "die" | "thud" | "flap";
@@ -92,6 +95,47 @@ function writeAudioSettings(settings: AudioSettings) {
   }
 }
 
+type AudioSessionNavigator = Navigator & { audioSession?: { type: string } };
+
+function audioConstructor(): typeof AudioContext | null {
+  if (typeof window === "undefined") return null;
+  return window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext ?? null;
+}
+
+export function isAppleTouch(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  return /iPhone|iPad|iPod/.test(ua) || (ua.includes("Macintosh") && navigator.maxTouchPoints > 1);
+}
+
+function silentWav(): string {
+  const samples = 800;
+  const bytes = new Uint8Array(44 + samples);
+  const view = new DataView(bytes.buffer);
+  const text = (offset: number, value: string) => {
+    for (let i = 0; i < value.length; i += 1) bytes[offset + i] = value.charCodeAt(i);
+  };
+  text(0, "RIFF");
+  view.setUint32(4, 36 + samples, true);
+  text(8, "WAVE");
+  text(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, 8000, true);
+  view.setUint32(28, 8000, true);
+  view.setUint16(32, 1, true);
+  view.setUint16(34, 8, true);
+  text(36, "data");
+  view.setUint32(40, samples, true);
+  bytes.fill(128, 44);
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return `data:audio/wav;base64,${window.btoa(binary)}`;
+}
+
+const gestureEvents = ["pointerdown", "pointerup", "touchend", "click", "keydown"] as const;
+
 class AudioEngine {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
@@ -102,7 +146,12 @@ class AudioEngine {
   private nextTime = 0;
   private slot = 0;
   private unlocked = false;
+  private primed = false;
   private hidden = false;
+  private listening = false;
+  private keeper: HTMLAudioElement | null = null;
+  private retrying = false;
+  private listeners = new Set<() => void>();
   settings: AudioSettings = defaults;
 
   load() {
@@ -110,10 +159,58 @@ class AudioEngine {
     return this.settings;
   }
 
+  listen() {
+    if (this.listening || typeof document === "undefined") return;
+    this.listening = true;
+    for (const name of gestureEvents) document.addEventListener(name, this.onGesture, { capture: true, passive: true });
+    document.addEventListener("visibilitychange", this.onWake);
+    window.addEventListener("pageshow", this.onWake);
+    window.addEventListener("focus", this.onWake);
+  }
+
+  subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  private emit() {
+    if (typeof document !== "undefined") document.documentElement.dataset.audio = `${this.status()}:${this.contextState()}`;
+    for (const listener of this.listeners) listener();
+  }
+
+  /** Number of oscillators and noise sources started since load, exposed for automated checks. */
+  scheduled = 0;
+
+  status(): AudioStatus {
+    if (!audioConstructor()) return "unsupported";
+    if (this.settings.muted) return "muted";
+    return this.ctx?.state === "running" ? "ready" : "locked";
+  }
+
+  hasPrimed(): boolean {
+    return this.primed;
+  }
+
+  contextState(): string {
+    return this.ctx?.state ?? "none";
+  }
+
+  private onGesture = () => {
+    if (this.settings.muted) return;
+    if (this.primed && this.ctx?.state === "running" && (!this.keeper || !this.keeper.paused)) return;
+    this.prime();
+  };
+
+  private onWake = () => {
+    this.hidden = document.visibilityState === "hidden";
+    this.sync();
+  };
+
   private build(): AudioContext | null {
     if (this.ctx) return this.ctx;
-    if (typeof window === "undefined") return null;
-    const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    const Ctor = audioConstructor();
     if (!Ctor) return null;
     const ctx = new Ctor();
     const master = ctx.createGain();
@@ -147,7 +244,11 @@ class AudioEngine {
     this.musicBus = musicBus;
     this.sfxBus = sfxBus;
     this.noise = noise;
-    document.addEventListener("visibilitychange", this.onVisibility);
+    ctx.onstatechange = () => {
+      if (ctx.state === "running" && this.unlocked && this.settings.music && !this.settings.muted && !this.hidden) this.startMusic();
+      this.emit();
+    };
+    this.listen();
     return ctx;
   }
 
@@ -161,29 +262,88 @@ class AudioEngine {
     return buffer;
   }
 
-  private onVisibility = () => {
-    this.hidden = document.visibilityState === "hidden";
+  /** Must run synchronously inside a user gesture handler (iOS Safari, Chrome autoplay policy). */
+  prime() {
+    const ctx = this.build();
+    if (!ctx) return;
+    const session = (navigator as AudioSessionNavigator).audioSession;
+    if (session) {
+      try {
+        session.type = "playback";
+      } catch {
+        this.emit();
+      }
+    }
+    if (this.settings.muted) return;
+    try {
+      const silence = ctx.createBuffer(1, 1, ctx.sampleRate);
+      const source = ctx.createBufferSource();
+      source.buffer = silence;
+      source.connect(ctx.destination);
+      source.start(0);
+    } catch {
+      this.emit();
+    }
+    if (isAppleTouch() && !session) this.keepSession();
+    void ctx.resume().catch(() => undefined).finally(() => this.emit());
+    this.primed = true;
     this.sync();
-  };
+  }
+
+  private keepSession() {
+    try {
+      if (!this.keeper) {
+        const element = document.createElement("audio");
+        element.src = silentWav();
+        element.loop = true;
+        element.preload = "auto";
+        element.setAttribute("playsinline", "");
+        element.setAttribute("x-webkit-airplay", "deny");
+        this.keeper = element;
+      }
+      if (this.keeper.paused) void this.keeper.play().catch(() => undefined);
+    } catch {
+      this.keeper = null;
+    }
+  }
 
   private sync() {
     const ctx = this.ctx;
     if (!ctx) return;
-    const shouldRun = this.unlocked && !this.settings.muted && !this.hidden;
+    const shouldRun = this.primed && !this.settings.muted && !this.hidden;
     if (shouldRun) {
-      void ctx.resume().catch(() => undefined);
-      if (this.settings.music) this.startMusic();
+      if (ctx.state !== "running") void ctx.resume().catch(() => undefined);
+      if (this.unlocked && this.settings.music) this.startMusic();
       else this.stopMusic();
     } else {
       this.stopMusic();
-      void ctx.suspend().catch(() => undefined);
+      this.keeper?.pause();
+      if (ctx.state === "running") void ctx.suspend().catch(() => undefined);
     }
+    this.emit();
   }
 
   unlock() {
-    if (!this.build()) return;
     this.unlocked = true;
-    this.sync();
+    this.prime();
+  }
+
+  /** Plays a short chime from a click handler and reports the real context state afterwards. */
+  test(): Promise<AudioStatus> {
+    if (this.settings.muted) {
+      this.settings = { ...this.settings, muted: false };
+      writeAudioSettings(this.settings);
+    }
+    this.prime();
+    const ctx = this.ctx;
+    if (!ctx) return Promise.resolve(this.status());
+    return ctx
+      .resume()
+      .catch(() => undefined)
+      .then(() => {
+        this.play("test");
+        return new Promise<AudioStatus>(resolve => window.setTimeout(() => resolve(this.status()), 120));
+      });
   }
 
   update(patch: Partial<AudioSettings>): AudioSettings {
@@ -197,6 +357,25 @@ class AudioEngine {
     }
     this.sync();
     return this.settings;
+  }
+
+  /** Effects requested while the context is suspended (sleep, tab switch, iOS interruption) resume it first. */
+  private ready(retry: () => void): boolean {
+    const ctx = this.ctx;
+    if (!ctx || !this.sfxBus || this.settings.muted) return false;
+    if (ctx.state === "running") return true;
+    if (this.primed && !this.hidden && !this.retrying) {
+      this.retrying = true;
+      const asked = performance.now();
+      void ctx
+        .resume()
+        .catch(() => undefined)
+        .then(() => {
+          this.retrying = false;
+          if (ctx.state === "running" && performance.now() - asked < 300) retry();
+        });
+    }
+    return false;
   }
 
   private startMusic() {
@@ -262,6 +441,7 @@ class AudioEngine {
     osc.connect(gain).connect(out);
     osc.start(time);
     osc.stop(time + (options.attack ?? 0.004) + decay + 0.05);
+    this.scheduled += 1;
   }
 
   private noiseBurst(time: number, duration: number, peak: number, out: AudioNode, filter: { type: BiquadFilterType; frequency: number; q?: number; sweepTo?: number }) {
@@ -279,6 +459,7 @@ class AudioEngine {
     source.connect(biquad).connect(gain).connect(out);
     source.start(time, Math.random() * 0.5);
     source.stop(time + duration + 0.05);
+    this.scheduled += 1;
   }
 
   private kalimba(frequency: number, time: number, peak: number, out: AudioNode) {
@@ -333,11 +514,16 @@ class AudioEngine {
   }
 
   play(name: Sfx) {
+    if (!this.ready(() => this.play(name))) return;
     const ctx = this.ctx;
     const out = this.sfxBus;
-    if (!ctx || !out || this.settings.muted || ctx.state !== "running") return;
+    if (!ctx || !out) return;
     const t = ctx.currentTime + 0.01;
     switch (name) {
+      case "test":
+        this.kalimba(midi(74), t, 0.22, out);
+        this.kalimba(midi(81), t + 0.16, 0.18, out);
+        break;
       case "click":
         this.tone("sine", 880, t, 0.06, 0.05, out, { glide: 660 });
         break;
@@ -507,9 +693,10 @@ class AudioEngine {
   }
 
   step(kind: StepKind, index: number) {
+    if (!this.ready(() => this.step(kind, index))) return;
     const ctx = this.ctx;
     const out = this.sfxBus;
-    if (!ctx || !out || this.settings.muted || ctx.state !== "running") return;
+    if (!ctx || !out) return;
     const t = ctx.currentTime + 0.01;
     const odd = index % 2 === 1;
     switch (kind) {
@@ -581,3 +768,11 @@ class AudioEngine {
 }
 
 export const audio = new AudioEngine();
+
+declare global {
+  interface Window {
+    fineAudio?: { state: () => string; scheduled: () => number };
+  }
+}
+
+if (typeof window !== "undefined") window.fineAudio = { state: () => audio.contextState(), scheduled: () => audio.scheduled };

@@ -1,20 +1,24 @@
 "use client";
 
 import { Briefcase, CircleHelp, Keyboard, Library, LogOut, Menu, Receipt } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Action, GameState } from "../../engine";
 import { useAudio } from "../audio/AudioProvider";
 import { Board } from "../board/Board";
+import { phoneQuery, useMediaQuery } from "../board/useMediaQuery";
 import { locales, useI18n } from "../i18n";
 import { iconStroke } from "../icons";
+import { chapters, useProfile } from "../profile";
 import type { LogEntry, MoveRecord, Stage, StatementRecord } from "../useGame";
 import { ActionBar, useActionModel } from "./Actions";
 import { AssetControls, AssetsSheet } from "./AssetsSheet";
-import { BoardCenter } from "./BoardCenter";
+import { BoardCenter, DiceTray, TurnBanner } from "./BoardCenter";
+import { ChapterBubble } from "./ChapterBubble";
 import { CardReveal } from "./CardReveal";
 import { CoinLayer } from "./CoinLayer";
 import { CreditsSheet } from "./CreditsSheet";
-import { Fina } from "./Fina";
+import { Logo } from "./Logo";
+import { Mascot } from "./Mascot";
 import { LogFeed } from "./LogFeed";
 import { MoneyGuide, MoneyHistory } from "./MoneySheets";
 import { Notices } from "./Notices";
@@ -24,7 +28,8 @@ import { Scenes } from "./Scenes";
 import { Sheet } from "./Sheet";
 import { SoundControl } from "./SoundControl";
 import { SpaceDetails } from "./SpaceDetails";
-import { StatementCard, StatementView } from "./Statement";
+import { StatementView } from "./Statement";
+import { StatementLine } from "./StatementLine";
 
 interface Props {
   truth: GameState;
@@ -57,9 +62,11 @@ export function GameScreen({ truth, view, stage, names, pawns, log, ledger, stat
   const [guideFor, setGuideFor] = useState<number | null>(null);
   const [statementSheet, setStatementSheet] = useState(false);
   const [sideTab, setSideTab] = useState<"log" | "statement">("log");
+  const { profile, ready, features, seeIntro } = useProfile();
+  const phone = useMediaQuery(phoneQuery);
   const current = truth.players[truth.currentPlayerIndex];
   const humanTurn = Boolean(current && !current.isBot);
-  const model = useActionModel(truth);
+  const model = useActionModel(truth, features);
   const disabled = busy || !humanTurn;
   const canAct = humanTurn && !busy;
   const round = Math.floor(view.turn / view.players.length) + 1;
@@ -74,6 +81,23 @@ export function GameScreen({ truth, view, stage, names, pawns, log, ledger, stat
   const sheetOwned = sheetSpace?.assetId ? truth.players[viewerIndex]?.assets.some(asset => asset.assetId === sheetSpace.assetId) : false;
   const spectator = !humanTurn ? t("spectator.watching", { name: names[truth.currentPlayerIndex] ?? "" }) : null;
   const status = humanTurn && busy ? (stage.dice?.rolling ? t("game.rolling") : t("game.wait")) : null;
+  const humanOwns = truth.players.some(player => !player.isBot && player.assets.length > 0);
+  const rentSeen = log.some(entry => entry.event.type === "rent.paid");
+  const unseenIntros = useMemo(
+    () => (ready && !profile.expert ? chapters.filter(chapter => chapter <= features.chapter && !profile.seenIntros.includes(chapter)) : []),
+    [ready, profile.expert, profile.seenIntros, features.chapter]
+  );
+  const pendingIntro = unseenIntros.length === 0
+    ? null
+    : features.chapter <= 2
+      ? unseenIntros.includes(1) ? 1 : humanOwns || rentSeen ? 2 : null
+      : unseenIntros[unseenIntros.length - 1] ?? null;
+  const showIntro = pendingIntro !== null && canAct && !stage.card && !stage.scene && !stage.banner && !anySheet ? pendingIntro : null;
+  const closeIntro = useCallback(() => {
+    if (pendingIntro === null) return;
+    for (const chapter of unseenIntros) if (chapter <= pendingIntro) seeIntro(chapter);
+    play("click");
+  }, [pendingIntro, unseenIntros, seeIntro, play]);
 
   const act = useCallback((action: Action) => {
     play("click");
@@ -131,27 +155,11 @@ export function GameScreen({ truth, view, stage, names, pawns, log, ledger, stat
   const header = (
     <div className="flex items-center gap-2">
       <div className="flex items-center gap-1.5">
-        <Fina size={30} mood={stage.mood === "celebrate" ? "celebrate" : "idle"} />
-        <span className="font-serif text-2xl font-black italic leading-none text-gold">FINE</span>
+        <Mascot size={30} mood={stage.mood === "celebrate" ? "celebrate" : "idle"} />
+        <Logo size={24} />
       </div>
       <span className="ml-1 whitespace-nowrap rounded-md border border-line2 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-text2">{t("game.round", { n: round })}</span>
       <div className="ml-auto flex items-center gap-1 sm:gap-2">
-        <button
-          type="button"
-          onClick={() => setStatementSheet(true)}
-          aria-label={t("statement.open")}
-          className="flex h-11 w-10 items-center justify-center rounded-xl border border-line2 text-text2 hover:border-gold hover:text-gold2 lg:hidden"
-        >
-          <Receipt size={18} strokeWidth={iconStroke} />
-        </button>
-        <button
-          type="button"
-          onClick={() => setGuideFor(viewerIndex)}
-          aria-label={t("guide.open", { name: names[viewerIndex] ?? "" })}
-          className="flex h-11 w-10 items-center justify-center rounded-xl border border-line2 text-text2 hover:border-gold hover:text-gold2 lg:hidden"
-        >
-          <CircleHelp size={18} strokeWidth={iconStroke} />
-        </button>
         <SoundControl />
         <button type="button" onClick={() => setMenu(true)} aria-label={t("game.menu")} className="flex h-11 w-11 items-center justify-center rounded-xl border border-line2 text-text2 hover:border-gold hover:text-gold2">
           <Menu size={19} strokeWidth={iconStroke} />
@@ -159,6 +167,19 @@ export function GameScreen({ truth, view, stage, names, pawns, log, ledger, stat
       </div>
     </div>
   );
+
+  const line = <StatementLine statement={showIntro === null ? cardStatement : null} onOpen={() => setStatementSheet(true)} />;
+
+  const hud = phone ? (
+    <div className="pointer-events-none absolute inset-x-0 top-2 z-10 flex flex-col items-center gap-2 px-16">
+      <TurnBanner stage={stage} names={names} round={round} className="flex justify-center" />
+      {stage.dice && (stage.dice.rolling || stage.hop !== null) && (
+        <div className="rounded-2xl border border-line2 bg-bg/85 px-3 py-1.5 shadow-xl backdrop-blur" data-testid="hud-dice">
+          <DiceTray stage={stage} size={40} />
+        </div>
+      )}
+    </div>
+  ) : null;
 
   const bar = (
     <ActionBar
@@ -183,20 +204,24 @@ export function GameScreen({ truth, view, stage, names, pawns, log, ledger, stat
           <Players state={view} names={names} ledger={ledger} onHistory={setHistoryFor} compact />
         </div>
 
-        <section className="relative min-h-0 min-w-0 flex-1 p-2 lg:p-6 xl:p-8">
+        <section className="relative min-h-0 min-w-0 flex-1 p-2 max-[640px]:px-0 max-[640px]:pb-0 lg:p-6 xl:p-8">
           <Board
             view={view}
             stage={stage}
+            camera={phone}
+            hud={hud}
             onOpenSpace={index => {
               play("click");
               setSpaceSheet(index);
             }}
-            center={layout => <BoardCenter view={view} stage={stage} names={names} thinking={thinking} layout={layout} />}
+            center={layout => <BoardCenter view={view} stage={stage} names={names} thinking={thinking} layout={layout} external={phone} />}
           />
-          <StatementCard statement={cardStatement} state={view} names={names} variant="sheet" onClose={onDismissStatement} />
         </section>
 
-        <div className="shrink-0 px-3 pb-[max(10px,env(safe-area-inset-bottom))] pt-1 lg:hidden">{bar}</div>
+        <div className="shrink-0 px-3 pb-[max(10px,env(safe-area-inset-bottom))] pt-1.5 lg:hidden">
+          {line}
+          {bar}
+        </div>
 
         <aside className="hidden h-dvh w-[380px] shrink-0 flex-col gap-4 border-l border-line bg-bg2/70 p-5 lg:flex xl:w-[420px]">
           {header}
@@ -228,9 +253,11 @@ export function GameScreen({ truth, view, stage, names, pawns, log, ledger, stat
                 </div>
               )}
             </div>
-            <StatementCard statement={cardStatement} state={view} names={names} variant="side" onClose={onDismissStatement} />
           </div>
-          {bar}
+          <div>
+            {line}
+            {bar}
+          </div>
           <p className="flex items-center gap-1.5 font-mono text-[10px] text-text3">
             <Keyboard size={12} strokeWidth={iconStroke} aria-hidden />
             {t("game.shortcuts")}
@@ -247,6 +274,7 @@ export function GameScreen({ truth, view, stage, names, pawns, log, ledger, stat
           names={names}
           playerIndex={viewerIndex}
           canAct={canAct}
+          features={features}
           onAct={act}
           onOpenSpace={index => {
             setAssetsOpen(false);
@@ -257,6 +285,7 @@ export function GameScreen({ truth, view, stage, names, pawns, log, ledger, stat
         <MoneyHistory open={historyFor !== null} playerIndex={historyFor} ledger={ledger} state={view} names={names} onClose={() => setHistoryFor(null)} />
         <MoneyGuide open={guideFor !== null} playerIndex={guideFor} state={view} names={names} onClose={() => setGuideFor(null)} />
         <CreditsSheet open={creditsOpen} onClose={() => setCreditsOpen(false)} />
+        <ChapterBubble chapter={showIntro} onDone={closeIntro} />
 
         <Sheet open={statementSheet} title={t("statement.title")} onClose={() => setStatementSheet(false)}>
           <div className="space-y-3 pb-3">
@@ -314,7 +343,31 @@ export function GameScreen({ truth, view, stage, names, pawns, log, ledger, stat
                 </button>
               ))}
             </div>
-            <div className="h-56 lg:hidden">
+            <div className="grid grid-cols-2 gap-2 lg:hidden">
+              <button
+                type="button"
+                onClick={() => {
+                  setMenu(false);
+                  setStatementSheet(true);
+                }}
+                className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-line2 bg-bg3 text-sm text-text hover:border-gold hover:text-gold2"
+              >
+                <Receipt size={17} strokeWidth={iconStroke} aria-hidden />
+                {t("statement.tab")}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMenu(false);
+                  setGuideFor(viewerIndex);
+                }}
+                className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-line2 bg-bg3 text-sm text-text hover:border-gold hover:text-gold2"
+              >
+                <CircleHelp size={17} strokeWidth={iconStroke} aria-hidden />
+                {t("guide.short")}
+              </button>
+            </div>
+            <div className="h-48 lg:hidden">
               <LogFeed state={view} names={names} log={log} limit={20} />
             </div>
             <button

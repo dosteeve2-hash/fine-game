@@ -1,17 +1,33 @@
 {
+  "id": "/",
   "name": "FINE Game",
   "short_name": "FINE",
   "description": "Joue, investis, deviens libre : le jeu de plateau d’éducation financière, jouable hors ligne.",
-  "start_url": "/",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "/?source=app",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
   "background_color": "#070e1f",
   "theme_color": "#070e1f",
+  "categories": ["games", "finance", "education"],
+  "prefer_related_applications": false,
   "icons": [
     { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
-    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+    { "src": "/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nouvelle partie",
+      "short_name": "Jouer",
+      "description": "Lancer une nouvelle partie de FINE",
+      "url": "/?source=shortcut",
+      "icons": [{ "src": "/icon-maskable-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
   ]
 }

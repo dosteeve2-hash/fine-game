@@ -7,6 +7,7 @@ import type { Action, GameState, InsuranceType, OwnedAsset } from "../../engine"
 import { familyIcons, iconStroke } from "../icons";
 import type { MessageKey } from "../messages/fr";
 import { accentFor, cityName, withAlpha } from "../theme";
+import type { Features } from "../profile";
 import { useText } from "../text";
 import { Sheet } from "./Sheet";
 
@@ -103,12 +104,13 @@ interface SheetProps {
   names: string[];
   playerIndex: number;
   canAct: boolean;
+  features: Features;
   onAct: (action: Action) => void;
   onOpenSpace: (index: number) => void;
   onClose: () => void;
 }
 
-export function AssetsSheet({ open, state, names, playerIndex, canAct, onAct, onOpenSpace, onClose }: SheetProps) {
+export function AssetsSheet({ open, state, names, playerIndex, canAct, features, onAct, onOpenSpace, onClose }: SheetProps) {
   const { t, d, money } = useText();
   const controls = useAssetControls(state, playerIndex, canAct);
   const player = controls.player;
@@ -167,6 +169,7 @@ export function AssetsSheet({ open, state, names, playerIndex, canAct, onAct, on
             )}
           </section>
 
+          {(features.loans || controls.debt > 0) && (
           <section>
             <h3 className="mb-1.5 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-text3">
               <Landmark size={12} strokeWidth={iconStroke} aria-hidden />
@@ -206,7 +209,9 @@ export function AssetsSheet({ open, state, names, playerIndex, canAct, onAct, on
               </div>
             </div>
           </section>
+          )}
 
+          {(features.insurance || player.insurance.length > 0) && (
           <section>
             <h3 className="mb-1.5 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-text3">
               <ShieldCheck size={12} strokeWidth={iconStroke} aria-hidden />
@@ -233,6 +238,8 @@ export function AssetsSheet({ open, state, names, playerIndex, canAct, onAct, on
               })}
             </div>
           </section>
+          )}
+          {(!features.loans || !features.insurance) && <p className="text-[12px] leading-snug text-text3">{t("chapter.moreLater")}</p>}
         </div>
       )}
     </Sheet>

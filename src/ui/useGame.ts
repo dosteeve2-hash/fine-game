@@ -10,6 +10,8 @@ import type { Explanation, LogEvent, MoneyMove, Statement } from "../engine/ledg
 import { pawnDef } from "./art/pawns";
 import { audio } from "./audio/engine";
 import type { MascotMood } from "./components/Fina";
+import { haptic } from "./haptics";
+import { chapterOf, useProfile } from "./profile";
 import { findCard } from "./text";
 
 export interface LogEntry {
@@ -49,12 +51,17 @@ export interface CardShow {
 
 export type SceneKind = "salary" | "tax" | "bank" | "circle" | "rest" | "audit" | "auditExit" | "restart";
 
+export type SceneVariant = "full" | "brief" | "locked";
+
 export interface SceneShow {
   id: number;
   kind: SceneKind;
   player: number;
   amount?: number;
   blocking: boolean;
+  variant: SceneVariant;
+  /** Chapter that unlocks the feature behind this space (variant "locked"). */
+  chapter?: number;
 }
 
 export type Anchor = { player: number } | { space: number };
@@ -89,6 +96,7 @@ interface Saved {
   nextId: number;
   ledger?: MoveRecord[];
   statements?: StatementRecord[];
+  gameId?: number;
 }
 
 const saveKey = "fine.save.v1";
@@ -96,8 +104,8 @@ const logLimit = 80;
 const ledgerLimit = 300;
 const statementLimit = 40;
 const emptyStage: Stage = { dice: null, hop: null, pulse: null, banner: null, card: null, scene: null, shake: 0, notices: [], coins: [], mood: "idle", focus: null, statement: null };
-const normalTiming = { dice: 1350, slow: 420, settle: 360, hop: 235, land: 380, banner: 1500, after: 420, coin: 700, card: 4400, bot: 1300, scene: 1650, jump: 900 };
-const reducedTiming = { dice: 450, slow: 120, settle: 120, hop: 110, land: 200, banner: 900, after: 250, coin: 300, card: 2600, bot: 600, scene: 900, jump: 250 };
+const normalTiming = { dice: 1350, slow: 420, settle: 360, hop: 235, land: 380, banner: 1500, after: 420, coin: 700, card: 3000, bot: 1300, scene: 1650, brief: 750, locked: 1100, jump: 900 };
+const reducedTiming = { dice: 450, slow: 120, settle: 120, hop: 110, land: 200, banner: 900, after: 250, coin: 300, card: 2200, bot: 600, scene: 900, brief: 500, locked: 800, jump: 250 };
 
 const noticeTypes = new Set([
   "start.salary",
@@ -171,6 +179,12 @@ export function useGame() {
   const [ledger, setLedger] = useState<MoveRecord[]>([]);
   const [statements, setStatements] = useState<StatementRecord[]>([]);
   const [hasSave, setHasSave] = useState(false);
+  const [gameId, setGameId] = useState(0);
+  const { features, firstScene } = useProfile();
+  const featuresRef = useRef(features);
+  const firstSceneRef = useRef(firstScene);
+  featuresRef.current = features;
+  firstSceneRef.current = firstScene;
   const nextId = useRef(1);
   const truthRef = useRef<GameState | null>(null);
   const pawnsRef = useRef<string[]>([]);
@@ -201,7 +215,7 @@ export function useGame() {
 
   const notify = useCallback((event: LogEvent, owner?: number) => {
     const notice: Notice = { id: nextId.current++, event, ...(owner === undefined ? {} : { owner }) };
-    patch(previous => ({ notices: [...previous.notices, notice].slice(-3) }));
+    patch(previous => ({ notices: [...previous.notices, notice].slice(-1) }));
   }, [patch]);
 
   const flyCoins = useCallback((from: Anchor, to: Anchor, count = 5) => {
@@ -209,8 +223,10 @@ export function useGame() {
     patch(previous => ({ coins: [...previous.coins, flight] }));
   }, [patch]);
 
-  const showScene = useCallback((kind: SceneKind, player: number, amount: number | undefined, blocking: boolean): Promise<void> => {
-    const scene: SceneShow = { id: nextId.current++, kind, player, blocking, ...(amount === undefined ? {} : { amount }) };
+  const showScene = useCallback((kind: SceneKind, player: number, amount: number | undefined, blocking: boolean, locked?: number): Promise<void> => {
+    const variant: SceneVariant = locked !== undefined ? "locked" : firstSceneRef.current(kind) ? "full" : "brief";
+    const scene: SceneShow = { id: nextId.current++, kind, player, blocking, variant, ...(amount === undefined ? {} : { amount }), ...(locked === undefined ? {} : { chapter: locked }) };
+    const duration = variant === "full" ? timing.current.scene : variant === "brief" ? timing.current.brief : timing.current.locked;
     audio.play(`scene.${kind}`);
     return new Promise<void>(resolve => {
       let done = false;
@@ -224,7 +240,7 @@ export function useGame() {
       sceneResolver.current?.();
       sceneResolver.current = finish;
       patch({ scene });
-      window.setTimeout(finish, timing.current.scene);
+      window.setTimeout(finish, duration);
     });
   }, [patch]);
 
@@ -293,6 +309,7 @@ export function useGame() {
       patch({ dice: { values, rolling: true }, banner: null, pulse: null });
       setMood("thinking", 0);
       audio.play("dice");
+      if (!before.players[mover]?.isBot) haptic("dice");
       await wait(t.dice);
       if (!alive()) return;
       patch({ dice: { values, rolling: false }, shake: nextId.current++ });
@@ -324,6 +341,7 @@ export function useGame() {
       const sent = events.find(event => event.type === "audit.sent");
       if (sent) {
         setMood("worried", 0);
+        if (!before.players[mover]?.isBot) haptic("loss");
         notify(sent);
         await showScene("audit", mover, undefined, true);
         if (!alive()) return;
@@ -334,7 +352,9 @@ export function useGame() {
         if (!alive()) return;
         patch({ pulse: { space: office, key: nextId.current++ } });
       } else if (landed?.type === "bank" || landed?.type === "circle" || landed?.type === "rest") {
-        await showScene(landed.type, mover, undefined, true);
+        const human = !before.players[mover]?.isBot;
+        const lockedAt = !human ? undefined : landed.type === "bank" && !featuresRef.current.loans ? chapterOf.loans : landed.type === "circle" && !featuresRef.current.circle ? chapterOf.circle : undefined;
+        await showScene(landed.type, mover, undefined, true, lockedAt);
         if (!alive()) return;
       }
 
@@ -343,6 +363,7 @@ export function useGame() {
         const deck = landed?.type === "opportunity" ? "opportunity" : "event";
         const amount = findCard(card.cardKey)?.card.effect.type === "cash" ? card.amount ?? 0 : 0;
         setMood(deck === "opportunity" || amount > 0 ? "happy" : amount < 0 ? "worried" : "surprised", 0);
+        if (amount < 0 && !before.players[mover]?.isBot) haptic("loss");
         const show: CardShow = { id: nextId.current++, cardId: card.cardKey, deck, amount, player: mover, auto: Boolean(before.players[mover]?.isBot) };
         await new Promise<void>(resolve => {
           cardResolver.current = resolve;
@@ -359,12 +380,14 @@ export function useGame() {
       const tax = events.find(event => event.type === "tax.paid");
       if (tax) {
         setMood("worried");
+        if (!before.players[mover]?.isBot) haptic("loss");
         await showScene("tax", mover, tax.amount, true);
         if (!alive()) return;
       }
       if (rent) {
         const owner = ownerOf(rent.assetId);
         audio.play("rentPaid");
+        if (!before.players[mover]?.isBot) haptic("loss");
         if (owner >= 0) flyCoins({ player: mover }, { player: owner }, 6);
         setMood("surprised");
         await wait(t.coin);
@@ -412,6 +435,7 @@ export function useGame() {
     const main = events[0];
     if (action.type === "buyAsset") {
       audio.play("buy");
+      if (!before.players[mover]?.isBot) haptic("buy");
       const position = before.players[mover]?.position ?? 0;
       flyCoins({ player: mover }, { space: position }, 5);
       setMood("happy");
@@ -489,9 +513,10 @@ export function useGame() {
     window.clearTimeout(moodTimer.current);
   }, []);
 
-  const open = useCallback((game: GameState, gameNames: string[], gamePawns: string[], saved: { log: LogEntry[]; ledger: MoveRecord[]; statements: StatementRecord[] }, opening: StatementRecord | null) => {
+  const open = useCallback((game: GameState, gameNames: string[], gamePawns: string[], saved: { log: LogEntry[]; ledger: MoveRecord[]; statements: StatementRecord[] }, opening: StatementRecord | null, id: number) => {
     reset();
     audio.unlock();
+    setGameId(id);
     setNames(gameNames);
     pawnsRef.current = gamePawns;
     setPawns(gamePawns);
@@ -529,7 +554,7 @@ export function useGame() {
     const first = openingStatement(game);
     const moves = first.moves.map(move => ({ ...move, id: nextId.current++ }));
     const opening: StatementRecord = { ...first.statement, id: nextId.current++ };
-    open(game, seats.map(seat => seat.name), seats.map(seat => seat.pawn), { log: [], ledger: moves, statements: [] }, opening);
+    open(game, seats.map(seat => seat.name), seats.map(seat => seat.pawn), { log: [], ledger: moves, statements: [] }, opening, seed);
   }, [open]);
 
   const resume = useCallback(() => {
@@ -537,7 +562,7 @@ export function useGame() {
     if (!saved) return;
     nextId.current = saved.nextId;
     const savedPawns = saved.state.players.map((_, index) => saved.pawns?.[index] ?? pawnDef(undefined, index).id);
-    open(saved.state, saved.names, savedPawns, { log: saved.log, ledger: saved.ledger ?? [], statements: saved.statements ?? [] }, null);
+    open(saved.state, saved.names, savedPawns, { log: saved.log, ledger: saved.ledger ?? [], statements: saved.statements ?? [] }, null, saved.gameId ?? saved.state.randomState);
   }, [open]);
 
   const clear = useCallback(() => {
@@ -572,8 +597,8 @@ export function useGame() {
       writeSave(null);
       return;
     }
-    writeSave({ state: truth, names, pawns, log, nextId: nextId.current, ledger, statements });
-  }, [truth, names, pawns, log, ledger, statements]);
+    writeSave({ state: truth, names, pawns, log, nextId: nextId.current, ledger, statements, gameId });
+  }, [truth, names, pawns, log, ledger, statements, gameId]);
 
   useEffect(() => {
     if (!truth || busy || truth.phase === "finished") return;
@@ -590,5 +615,5 @@ export function useGame() {
     return () => window.clearTimeout(timer);
   }, [truth, busy, act, reduced, setMood]);
 
-  return { truth, view, stage, busy, thinking, names, pawns, log, ledger, statements, hasSave, start, resume, act, leave, discard, dismissCard, dismissScene, dismissStatement, dismissNotice, removeCoins };
+  return { truth, view, stage, busy, thinking, names, pawns, log, ledger, statements, hasSave, gameId, start, resume, act, leave, discard, dismissCard, dismissScene, dismissStatement, dismissNotice, removeCoins };
 }
