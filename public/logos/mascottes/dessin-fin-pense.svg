@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Mascotte FINE">
+<defs><linearGradient id="bgfinpense" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16233d"/><stop offset="1" stop-color="#070e1f"/></linearGradient><radialGradient id="skfinpense" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#c68a5e"/><stop offset="1" stop-color="#a96f47"/></radialGradient></defs>
+<rect width="400" height="400" fill="url(#bgfinpense)"/>
+<circle cx="200" cy="215" r="150" fill="#f0a832" opacity=".08"/>
+<path d="M52 400 Q56 318 140 292 L260 292 Q344 318 348 400Z" fill="#5a1626"/>
+<path d="M92 400 Q96 332 150 300 L200 360 L250 300 Q304 332 308 400Z" fill="#7a2236"/>
+<path d="M150 296 L200 362 L250 296 Q226 284 200 286 Q174 284 150 296Z" fill="#f5f0e8"/>
+<path d="M150 296 L200 362 L178 288Z" fill="#d9d2c2"/>
+<circle cx="200" cy="380" r="4" fill="#f0a832"/>
+<path d="M120 336 Q160 376 212 368" stroke="#f0a832" stroke-width="3.5" fill="none"/><circle cx="214" cy="368" r="10" fill="#f7c060" stroke="#c07d10" stroke-width="2"/><circle cx="214" cy="368" r="5.5" fill="none" stroke="#c07d10" stroke-width="1.5"/>
+<path d="M176 262 L176 296 Q200 310 224 296 L224 262Z" fill="#a96f47"/>
+<ellipse cx="126" cy="206" rx="13" ry="22" fill="#a96f47"/><ellipse cx="274" cy="206" rx="13" ry="22" fill="#a96f47"/>
+<path d="M124 190 Q116 160 128 138 L140 150 Q132 176 138 206Z" fill="#e8e6e1"/><path d="M276 190 Q284 160 272 138 L260 150 Q268 176 262 206Z" fill="#e8e6e1"/>
+<path d="M128 150 Q124 262 200 276 Q276 262 272 150 Q200 128 128 150Z" fill="url(#skfinpense)"/>
+
+<g>
+    <path d="M118 128 Q122 52 200 46 Q278 52 282 128 Q200 142 118 128Z" fill="#16233d"/>
+    <path d="M118 128 Q122 52 200 46 Q278 52 282 128 Q268 100 200 96 Q132 100 118 128Z" fill="#0c1528" opacity=".55"/>
+    <path d="M168 49 Q200 62 232 49 Q200 40 168 49Z" fill="#0c1528"/>
+    <path d="M118 128 Q200 146 282 128 L282 112 Q200 128 118 112Z" fill="#f0a832"/><path d="M118 112 Q200 128 282 112" stroke="#c07d10" stroke-width="2" fill="none"/>
+    <path d="M92 134 Q200 170 308 134 Q300 120 282 124 Q200 142 118 124 Q100 120 92 134Z" fill="#16233d"/>
+    <path d="M92 134 Q200 170 308 134" stroke="#070e1f" stroke-opacity=".5" stroke-width="2" fill="none"/></g>
+<path d="M146 156 Q166 144 190 152" stroke="#e8e6e1" stroke-width="8" stroke-linecap="round" fill="none"/><path d="M210 160 Q232 160 254 164" stroke="#e8e6e1" stroke-width="8" stroke-linecap="round" fill="none"/>
+<ellipse cx="168" cy="188" rx="9" ry="7" fill="#fff"/><ellipse cx="232" cy="188" rx="9" ry="7" fill="#fff"/>
+<circle cx="173" cy="189" r="4.6" fill="#1a1210"/><circle cx="237" cy="189" r="4.6" fill="#1a1210"/>
+<circle cx="168" cy="188" r="25" fill="#fff" fill-opacity=".12" stroke="#f0a832" stroke-width="4"/><circle cx="232" cy="188" r="25" fill="#fff" fill-opacity=".12" stroke="#f0a832" stroke-width="4"/>
+<path d="M193 186 Q200 180 207 186" stroke="#f0a832" stroke-width="4" fill="none"/><path d="M143 184 L128 180 M257 184 L272 180" stroke="#f0a832" stroke-width="3.5"/>
+<path d="M154 176 Q160 170 170 170" stroke="#fff" stroke-opacity=".6" stroke-width="3" fill="none" stroke-linecap="round"/>
+<path d="M200 190 Q190 222 196 228 Q204 232 212 226" stroke="#a96f47" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+<path d="M184 242 Q200 238 218 244" stroke="#4a2a1c" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+<path d="M200 226 Q176 214 150 228 Q146 244 162 244 Q184 240 200 232 Q216 240 238 244 Q254 244 250 228 Q224 214 200 226Z" fill="#e8e6e1" stroke="#bdbab2" stroke-width="1.5"/>
+
+<g><ellipse cx="326" cy="342" rx="26" ry="30" fill="#c68a5e" stroke="#a96f47" stroke-width="2"/>
+<circle cx="316" cy="304" r="22" fill="#f7c060" stroke="#c07d10" stroke-width="3"/><circle cx="316" cy="304" r="15" fill="none" stroke="#c07d10" stroke-width="2"/><path d="M308 310 l0 -12 h14 M308 304 h10" stroke="#c07d10" stroke-width="3" fill="none"/>
+<path d="M298 322 q10 -12 22 -8 q8 4 6 12 q-14 -2 -28 -4z" fill="#c68a5e" stroke="#a96f47" stroke-width="2"/></g>
+</svg>
