@@ -36,6 +36,11 @@
       "source": "/galerie.html",
       "destination": "/galerie",
       "permanent": false
+    },
+    {
+      "source": "/logos.html",
+      "destination": "/logos",
+      "permanent": false
     }
   ]
 }

@@ -136,9 +136,9 @@ export function BoardCenter({ view, stage, names, thinking, layout, external = f
       <div className="relative flex h-full w-full items-center justify-between gap-4 px-[6%]">
         {banner}
         <div className="flex min-w-0 flex-col items-center gap-2">
-          <Logo size={clamp(layout.unit * 0.9, 28, 76)} as="div" />
+          <Logo size={clamp(layout.unit * 1.1, 40, 92)} />
           <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-text3">{t("game.round", { n: round })}</div>
-          <Mascot mood={stage.mood} size={finaSize} label={t("fina.label")} />
+          <Mascot mood={stage.mood} size={finaSize} label={t("mascot.label")} />
         </div>
         <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-4">
           {pill}
@@ -153,7 +153,7 @@ export function BoardCenter({ view, stage, names, thinking, layout, external = f
     <div className="relative flex h-full w-full flex-col items-center gap-2 px-2 py-3">
       {banner}
       {pill}
-      <Mascot mood={stage.mood} size={finaSize} label={t("fina.label")} />
+      <Mascot mood={stage.mood} size={finaSize} label={t("mascot.label")} />
       {dice}
       {circle}
       {showDeed && stage.focus !== null && (

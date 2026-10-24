@@ -100,15 +100,19 @@ export function SetupScreen({ hasSave, onStart, onResume }: Props) {
 
       <header className="flex flex-col items-center pt-14 text-center lg:flex-1 lg:items-start lg:pt-0 lg:text-left">
         <motion.div initial={{ scale: 0.6, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 160, damping: 14 }} className="lg:hidden">
-          <Mascot size={96} mood="happy" label={t("fina.label")} />
+          <Mascot size={96} mood="happy" label={t("mascot.label")} />
         </motion.div>
         <motion.div initial={{ scale: 0.6, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 160, damping: 14 }} className="hidden lg:block">
-          <Mascot size={200} mood="happy" label={t("fina.label")} />
+          <Mascot size={200} mood="happy" label={t("mascot.label")} />
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="mt-2 lg:mt-6">
-          <h1 className="sr-only">FINE</h1>
-          <Logo size={60} className="lg:hidden" />
-          <Logo size={120} className="hidden lg:inline" />
+          <h1 className="sr-only">FINE Game</h1>
+          <div className="lg:hidden">
+            <Logo size={104} decorative priority />
+          </div>
+          <div className="hidden lg:block">
+            <Logo size={168} decorative priority />
+          </div>
         </motion.div>
         <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.28em] text-text3 lg:text-xs">{t("setup.subtitle")}</p>
         <p className="mt-2 font-serif text-lg italic text-text2 lg:mt-4 lg:text-3xl">{t("app.tagline")}</p>

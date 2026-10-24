@@ -9,7 +9,7 @@ import { explainAction, openingStatement } from "../engine/ledger";
 import type { Explanation, LogEvent, MoneyMove, Statement } from "../engine/ledger";
 import { pawnDef } from "./art/pawns";
 import { audio } from "./audio/engine";
-import type { MascotMood } from "./components/Fina";
+import type { MascotMood } from "./components/Mascot";
 import { haptic } from "./haptics";
 import { chapterOf, useProfile } from "./profile";
 import { findCard } from "./text";

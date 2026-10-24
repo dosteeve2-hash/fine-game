@@ -6,7 +6,8 @@ import { credits } from "../art/credits";
 import { useI18n } from "../i18n";
 import { iconStroke } from "../icons";
 import type { MessageKey } from "../messages/fr";
-import { Fina } from "./Fina";
+import { Logo } from "./Logo";
+import { Mascot } from "./Mascot";
 import { Sheet } from "./Sheet";
 
 export function CreditsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -18,20 +19,25 @@ export function CreditsSheet({ open, onClose }: { open: boolean; onClose: () => 
         {credits.map(source => (
           <section key={source.id} className="rounded-2xl border border-line2 bg-bg3 p-3">
             <div className="flex items-start gap-3">
-              {source.id === "lorelei" && <Fina size={44} mood="happy" />}
+              {source.id === "monsieurFin" && <Mascot size={52} mood="happy" />}
+              {source.id === "sceau" && <Logo size={52} decorative />}
               <div className="min-w-0 flex-1">
                 <h3 className="font-serif text-lg font-bold italic leading-tight text-text">{source.title}</h3>
                 <p className="text-xs text-text2">{source.owner}</p>
                 <p className="mt-1 text-xs leading-snug text-text2">{t(`credits.source.${source.id}` as MessageKey)}</p>
                 <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 font-mono text-[11px]">
-                  <a href={source.licenseUrl} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 text-gold2 underline-offset-2 hover:underline">
-                    {t("credits.license", { license: source.license })}
-                    <ExternalLink size={11} strokeWidth={iconStroke} aria-hidden />
-                  </a>
-                  <a href={source.url} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 text-text2 underline-offset-2 hover:underline">
-                    {t("credits.source")}
-                    <ExternalLink size={11} strokeWidth={iconStroke} aria-hidden />
-                  </a>
+                  {source.license && source.licenseUrl && (
+                    <a href={source.licenseUrl} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 text-gold2 underline-offset-2 hover:underline">
+                      {t("credits.license", { license: source.license })}
+                      <ExternalLink size={11} strokeWidth={iconStroke} aria-hidden />
+                    </a>
+                  )}
+                  {source.url && (
+                    <a href={source.url} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 text-text2 underline-offset-2 hover:underline">
+                      {t("credits.source")}
+                      <ExternalLink size={11} strokeWidth={iconStroke} aria-hidden />
+                    </a>
+                  )}
                 </div>
               </div>
             </div>

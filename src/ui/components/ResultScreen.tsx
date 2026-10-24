@@ -13,6 +13,7 @@ import { ArtIcon } from "../art";
 import type { MessageKey } from "../messages/fr";
 import { chapterCount, useProfile, type Finished } from "../profile";
 import { ChapterProgress } from "./ChapterBubble";
+import { Logo } from "./Logo";
 import { Mascot } from "./Mascot";
 import { PawnShape, PawnsProvider } from "./Pawn";
 
@@ -86,8 +87,9 @@ export function ResultScreen({ state, names, pawns, gameId, onReplay, onHome }: 
       <Confetti />
       <motion.div className="flex flex-col items-center lg:flex-1 lg:items-start" initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 120, damping: 12 }}>
         <div className="flex items-end gap-3">
-          <Mascot mood="celebrate" size={150} label={t("fina.label")} />
+          <Mascot mood="celebrate" size={150} label={t("mascot.label")} />
           <ArtIcon name="game-icons:laurels-trophy" size={72} color="#f0a832" />
+          <Logo size={64} className="ml-1" />
         </div>
         <h1 className="mt-4 font-serif text-5xl font-black italic leading-none text-gold lg:text-7xl">{freedom ? t("result.freedomTitle") : t("result.limitTitle")}</h1>
         <p className="mt-3 flex items-center gap-2 text-lg text-text">

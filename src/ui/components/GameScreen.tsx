@@ -156,7 +156,7 @@ export function GameScreen({ truth, view, stage, names, pawns, log, ledger, stat
     <div className="flex items-center gap-2">
       <div className="flex items-center gap-1.5">
         <Mascot size={30} mood={stage.mood === "celebrate" ? "celebrate" : "idle"} />
-        <Logo size={24} />
+        <Logo size={32} />
       </div>
       <span className="ml-1 whitespace-nowrap rounded-md border border-line2 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-text2">{t("game.round", { n: round })}</span>
       <div className="ml-auto flex items-center gap-1 sm:gap-2">

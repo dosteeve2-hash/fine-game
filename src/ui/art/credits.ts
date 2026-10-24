@@ -8,12 +8,12 @@ export interface CreditItem {
 }
 
 export interface CreditSource {
-  id: "gameIcons" | "noto" | "fluent" | "mdi" | "lorelei" | "dicebear" | "lucide" | "fonts" | "sound";
+  id: "gameIcons" | "noto" | "fluent" | "mdi" | "monsieurFin" | "sceau" | "lucide" | "fonts" | "sound";
   title: string;
   owner: string;
-  license: string;
-  licenseUrl: string;
-  url: string;
+  license?: string;
+  licenseUrl?: string;
+  url?: string;
   items: CreditItem[];
 }
 
@@ -85,21 +85,16 @@ export const credits: CreditSource[] = [
     items: itemsOf("mdi", "Pictogrammers", slug => `https://pictogrammers.com/library/mdi/icon/${slug}/`)
   },
   {
-    id: "lorelei",
-    title: "Lorelei (Fina)",
-    owner: "Lisa Wischofsky",
-    license: "CC0 1.0",
-    licenseUrl: "https://creativecommons.org/publicdomain/zero/1.0/",
-    url: "https://www.dicebear.com/styles/lorelei/",
+    id: "monsieurFin",
+    title: "Monsieur Fin",
+    owner: "FINE Game · Canva",
+    url: "https://www.canva.com",
     items: []
   },
   {
-    id: "dicebear",
-    title: "DiceBear",
-    owner: "Florian Körner",
-    license: "MIT",
-    licenseUrl: "https://github.com/dicebear/dicebear/blob/main/LICENSE",
-    url: "https://www.dicebear.com",
+    id: "sceau",
+    title: "Le Sceau",
+    owner: "FINE Game",
     items: []
   },
   {

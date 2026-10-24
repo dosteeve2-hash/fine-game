@@ -32,7 +32,7 @@ export function ChapterProgress({ chapter }: { chapter: number }) {
   );
 }
 
-/** Fina introduces a newly opened chapter once, in one short bubble. */
+/** Monsieur Fin introduces a newly opened chapter once, in one short bubble. */
 export function ChapterBubble({ chapter, onDone }: Props) {
   const { t } = useI18n();
   return (

@@ -1,5 +1,13 @@
-const CACHE = "fine-v5";
-const SHELL = ["/", "/manifest.webmanifest", "/icon.svg", "/icon-192.png", "/icon-512.png", "/icon-maskable-192.png", "/icon-maskable-512.png", "/apple-touch-icon.png"];
+const CACHE = "fine-v6";
+const MASCOT = ["idle", "happy", "thinking", "surprised", "worried", "celebrate"].map(name => `/mascot/${name}.webp`);
+const SHELL = [
+  "/",
+  "/logos/fine-sceau-rond.svg",
+  "/logos/fine-sceau-rond-clair.svg",
+  "/favicon.ico",
+  "/favicon-32.png",
+  ...MASCOT,
+  "/manifest.webmanifest", "/icon.svg", "/icon-192.png", "/icon-512.png", "/icon-maskable-192.png", "/icon-maskable-512.png", "/apple-touch-icon.png"];
 
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)));

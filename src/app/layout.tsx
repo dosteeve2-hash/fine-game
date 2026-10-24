@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description: "Joue, investis, deviens libre : le jeu de plateau d’éducation financière, jouable hors ligne.",
   manifest: "/manifest.webmanifest",
   applicationName: "FINE",
-  icons: { icon: "/icon.svg", apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }] },
+  icons: { icon: [{ url: "/icon.svg", type: "image/svg+xml" }, { url: "/favicon-32.png", sizes: "32x32", type: "image/png" }, { url: "/favicon.ico", sizes: "48x48" }], apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }] },
   appleWebApp: { capable: true, title: "FINE", statusBarStyle: "black-translucent", startupImage: startupImages },
   formatDetection: { telephone: false, email: false, address: false },
   other: { "apple-mobile-web-app-capable": "yes", "mobile-web-app-capable": "yes" }
