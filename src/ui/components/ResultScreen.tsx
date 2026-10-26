@@ -43,7 +43,7 @@ function Confetti() {
             left: `${piece.x}%`,
             width: piece.size,
             height: piece.size,
-            background: "radial-gradient(circle at 35% 30%, #ffe3a1 0%, #f0a832 55%, #a8670b 100%)",
+            background: "radial-gradient(circle at 35% 30%, #ffe3a1 0%, #f2a900 55%, #a8670b 100%)",
             boxShadow: "0 0 0 1px rgba(122,74,6,0.7)"
           }}
           initial={{ y: -40, x: 0, opacity: 0, rotateX: 0 }}
@@ -88,7 +88,7 @@ export function ResultScreen({ state, names, pawns, gameId, onReplay, onHome }: 
       <motion.div className="flex flex-col items-center lg:flex-1 lg:items-start" initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 120, damping: 12 }}>
         <div className="flex items-end gap-3">
           <Mascot mood="celebrate" size={150} label={t("mascot.label")} />
-          <ArtIcon name="game-icons:laurels-trophy" size={72} color="#f0a832" />
+          <ArtIcon name="game-icons:laurels-trophy" size={72} color="#f2a900" />
           <Logo size={64} className="ml-1" />
         </div>
         <h1 className="mt-4 font-serif text-5xl font-black italic leading-none text-gold lg:text-7xl">{freedom ? t("result.freedomTitle") : t("result.limitTitle")}</h1>

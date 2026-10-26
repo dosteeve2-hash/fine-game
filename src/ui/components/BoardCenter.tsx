@@ -64,8 +64,8 @@ export function TurnBanner({ stage, names, round, className = "pointer-events-no
           <div
             className="flex max-w-full items-center gap-3 rounded-2xl border bg-bg px-4 py-2.5 shadow-2xl"
             style={{
-              borderColor: stage.banner.human ? "#f0a832" : "#2a3b5e",
-              boxShadow: stage.banner.human ? "0 0 0 1px rgba(240,168,50,0.5), 0 18px 50px -16px rgba(240,168,50,0.55)" : undefined
+              borderColor: stage.banner.human ? "#f2a900" : "#55536d",
+              boxShadow: stage.banner.human ? "0 0 0 1px rgba(242,169,0,0.5), 0 18px 50px -16px rgba(242,169,0,0.4)" : undefined
             }}
           >
             <PawnShape index={stage.banner.player} size={24} active />

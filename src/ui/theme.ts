@@ -1,14 +1,14 @@
 import type { Family, SpaceType } from "../engine";
 
 export const palette = {
-  night: "#070e1f",
-  gold: "#f0a832",
-  ivory: "#f5f0e8",
-  gain: "#3cc48e",
-  loss: "#e2706b"
+  night: "#20204a",
+  gold: "#f2a900",
+  ivory: "#fffaf0",
+  gain: "#24734d",
+  loss: "#a83c38"
 } as const;
 
-export const playerColors = ["#f0a832", "#9fc2e0", "#5fc79f", "#d6977a"] as const;
+export const playerColors = ["#f2a900", "#315b83", "#24734d", "#a83c38"] as const;
 
 export const familyColors: Record<Family, string> = {
   trade: "#c9a35c",
@@ -20,14 +20,14 @@ export const familyColors: Record<Family, string> = {
 };
 
 export const spaceColors: Record<Exclude<SpaceType, "asset">, string> = {
-  start: "#f0a832",
+  start: "#f2a900",
   event: "#d08a7c",
   opportunity: "#6fbf98",
   tax: "#a9b2c6",
   circle: "#9fc2e0",
   bank: "#e3be7a",
   rest: "#a9b2c6",
-  audit: "#e2706b"
+  audit: "#e8877c"
 };
 
 const cities: Record<string, string> = {

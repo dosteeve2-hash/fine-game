@@ -21,10 +21,10 @@ function Face({ value, size }: { value: number; size: number }) {
           <stop offset="100%" stopColor="#e6dccb" />
         </linearGradient>
       </defs>
-      <rect x={3} y={3} width={94} height={94} rx={22} fill="url(#die-face)" stroke="#c07d10" strokeWidth={3} />
+      <rect x={3} y={3} width={94} height={94} rx={22} fill="url(#die-face)" stroke="#9b6800" strokeWidth={3} />
       <rect x={9} y={9} width={82} height={82} rx={17} fill="none" stroke="#ffffff" strokeOpacity={0.7} strokeWidth={1.5} />
       {(pipLayout[value] ?? []).map(([cx, cy], index) => (
-        <circle key={index} cx={cx} cy={cy} r={value === 1 ? 11 : 8.5} fill={value === 1 ? "#c07d10" : "#0c1528"} />
+        <circle key={index} cx={cx} cy={cy} r={value === 1 ? 11 : 8.5} fill={value === 1 ? "#9b6800" : "#20204a"} />
       ))}
     </svg>
   );

@@ -85,8 +85,8 @@ export function Mascot({ mood = "idle", size = 96, label, framed = true, classNa
         <span
           className="absolute inset-0 rounded-full"
           style={{
-            background: "radial-gradient(75% 75% at 50% 35%, #1b2b4b 0%, #0c1528 70%, #070e1f 100%)",
-            boxShadow: "inset 0 0 0 1.5px rgba(240,168,50,0.55), inset 0 0 0 4px rgba(7,14,31,0.9), inset 0 0 0 5px rgba(240,168,50,0.18), 0 10px 30px -12px rgba(0,0,0,0.8)"
+            background: "radial-gradient(75% 75% at 50% 35%, #30305c 0%, #20204a 70%, #171738 100%)",
+            boxShadow: "inset 0 0 0 1.5px rgba(242,169,0,0.55), inset 0 0 0 4px rgba(32,32,74,0.9), inset 0 0 0 5px rgba(242,169,0,0.18), 0 10px 30px -12px rgba(32,32,74,0.45)"
           }}
         />
       )}

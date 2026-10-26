@@ -98,7 +98,7 @@ export function SoundControl() {
                 max={100}
                 value={Math.round(volume * 100)}
                 onChange={event => setVolume(Number(event.target.value) / 100)}
-                className="mt-1 w-full accent-[#f0a832]"
+                className="mt-1 w-full accent-[#f2a900]"
               />
             </label>
             <label className="mt-2 block px-1">
@@ -109,7 +109,7 @@ export function SoundControl() {
                 max={100}
                 value={Math.round(musicVolume * 100)}
                 onChange={event => setMusicVolume(Number(event.target.value) / 100)}
-                className="mt-1 w-full accent-[#f0a832]"
+                className="mt-1 w-full accent-[#f2a900]"
               />
             </label>
             <label className="mt-2 block px-1">
@@ -120,7 +120,7 @@ export function SoundControl() {
                 max={100}
                 value={Math.round(sfxVolume * 100)}
                 onChange={event => setSfxVolume(Number(event.target.value) / 100)}
-                className="mt-1 w-full accent-[#f0a832]"
+                className="mt-1 w-full accent-[#f2a900]"
               />
             </label>
           </motion.div>

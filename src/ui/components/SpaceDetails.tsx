@@ -47,7 +47,7 @@ export function SpaceDetails({ state, names, index, compact = false }: Props) {
   const level = owned?.level ?? 0;
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-line2 bg-[#f5f0e8] text-[#111d34] shadow-[0_18px_40px_-18px_rgba(0,0,0,0.8)]" style={{ perspective: 900 }}>
+    <div className="overflow-hidden rounded-2xl border border-line2 bg-[#fffaf0] text-[#20204a] shadow-[0_18px_40px_-18px_rgba(32,32,74,0.42)]" style={{ perspective: 900 }}>
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={`${space.assetId}-${ownerIndex}`}
@@ -57,18 +57,18 @@ export function SpaceDetails({ state, names, index, compact = false }: Props) {
           transition={{ duration: 0.32, ease: "easeOut" }}
         >
           <div className="flex items-center gap-2 px-3 py-2" style={{ background: accent }}>
-            <SpaceIcon space={space} size={compact ? 16 : 18} color="#0c1528" />
-            <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#0c1528]">{t(`family.${space.family}` as MessageKey)}</span>
-            {!compact && <span className="ml-auto font-mono text-[10px] uppercase tracking-wider text-[#0c1528]/70">{t("deed.title")}</span>}
+            <SpaceIcon space={space} size={compact ? 16 : 18} color="#20204a" />
+            <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#20204a]">{t(`family.${space.family}` as MessageKey)}</span>
+            {!compact && <span className="ml-auto font-mono text-[10px] uppercase tracking-wider text-[#20204a]/70">{t("deed.title")}</span>}
           </div>
           <div className={compact ? "px-3 pb-3 pt-2" : "px-4 pb-4 pt-3"}>
             <div className={`text-center font-serif font-black italic leading-tight ${compact ? "text-base" : "text-xl"}`}>{d(space.titleKey)}</div>
-            <div className="mt-1 text-center font-mono text-xs text-[#4e5f82]">
-              {t("deed.price")} · <span className="font-semibold text-[#111d34]">{money(space.price ?? 0)}</span>
+            <div className="mt-1 text-center font-mono text-xs text-[#55536d]">
+              {t("deed.price")} · <span className="font-semibold text-[#20204a]">{money(space.price ?? 0)}</span>
             </div>
             <table className={`mt-2 w-full font-mono ${compact ? "text-[11px]" : "text-xs"}`}>
               <thead>
-                <tr className="text-[10px] uppercase tracking-wider text-[#4e5f82]">
+                <tr className="text-[10px] uppercase tracking-wider text-[#55536d]">
                   <th className="pb-1 text-left font-normal" />
                   <th className="pb-1 text-right font-normal">{compact ? t("game.income1") : t("deed.income")}</th>
                   <th className="pb-1 text-right font-normal">{t("game.rent")}</th>
@@ -84,8 +84,8 @@ export function SpaceDetails({ state, names, index, compact = false }: Props) {
                 ))}
               </tbody>
             </table>
-            <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-2 border-t border-[#111d34]/10 pt-2 font-mono text-[11px]">
-              <span className="text-[#4e5f82]">{t("deed.upgrades")}</span>
+            <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-2 border-t border-[#20204a]/10 pt-2 font-mono text-[11px]">
+              <span className="text-[#55536d]">{t("deed.upgrades")}</span>
               <span className="whitespace-nowrap">
                 {money(costs[0])} · {money(costs[1])}
               </span>

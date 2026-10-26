@@ -19,25 +19,25 @@ interface Props {
 
 function CardBack() {
   return (
-    <div className="absolute inset-0 overflow-hidden rounded-[22px] border border-gold/60 bg-[#0c1528]" style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
+    <div className="absolute inset-0 overflow-hidden rounded-[22px] border border-gold/60 bg-[#20204a]" style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
       <svg viewBox="0 0 200 290" preserveAspectRatio="xMidYMid slice" className="h-full w-full" aria-hidden>
         <defs>
           <pattern id="card-weave" width="20" height="20" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-            <path d="M0 10h20M10 0v20" stroke="#f0a832" strokeOpacity="0.16" strokeWidth="1" />
-            <circle cx="10" cy="10" r="1.6" fill="#f0a832" fillOpacity="0.28" />
+            <path d="M0 10h20M10 0v20" stroke="#f2a900" strokeOpacity="0.16" strokeWidth="1" />
+            <circle cx="10" cy="10" r="1.6" fill="#f2a900" fillOpacity="0.28" />
           </pattern>
           <radialGradient id="card-glow" cx="50%" cy="45%" r="60%">
-            <stop offset="0%" stopColor="#f0a832" stopOpacity="0.22" />
-            <stop offset="100%" stopColor="#f0a832" stopOpacity="0" />
+            <stop offset="0%" stopColor="#f2a900" stopOpacity="0.22" />
+            <stop offset="100%" stopColor="#f2a900" stopOpacity="0" />
           </radialGradient>
         </defs>
         <rect width="200" height="290" fill="url(#card-weave)" />
         <rect width="200" height="290" fill="url(#card-glow)" />
-        <rect x="10" y="10" width="180" height="270" rx="16" fill="none" stroke="#f0a832" strokeOpacity="0.55" strokeWidth="1.2" />
-        <rect x="16" y="16" width="168" height="258" rx="12" fill="none" stroke="#f0a832" strokeOpacity="0.2" strokeWidth="1" />
-        <circle cx="100" cy="140" r="42" fill="#070e1f" stroke="#f0a832" strokeWidth="1.6" />
+        <rect x="10" y="10" width="180" height="270" rx="16" fill="none" stroke="#f2a900" strokeOpacity="0.55" strokeWidth="1.2" />
+        <rect x="16" y="16" width="168" height="258" rx="12" fill="none" stroke="#f2a900" strokeOpacity="0.2" strokeWidth="1" />
+        <circle cx="100" cy="140" r="42" fill="#20204a" stroke="#f2a900" strokeWidth="1.6" />
         <circle cx="100" cy="140" r="35" fill="none" stroke="#f7c060" strokeOpacity="0.4" strokeDasharray="2 3" />
-        <text x="100" y="156" textAnchor="middle" fontFamily="var(--font-playfair), serif" fontStyle="italic" fontWeight="900" fontSize="46" fill="#f0a832">F</text>
+        <text x="100" y="156" textAnchor="middle" fontFamily="var(--font-lilita), sans-serif" fontWeight="400" fontSize="46" fill="#f2a900">F</text>
         <text x="100" y="236" textAnchor="middle" fontFamily="var(--font-jetbrains), monospace" fontSize="10" letterSpacing="5" fill="#f7c060" fillOpacity="0.8">FINE</text>
       </svg>
     </div>
@@ -64,7 +64,7 @@ export function CardReveal({ card, state, names, onClose }: Props) {
   const found = card ? findCard(card.cardId) : null;
   const prefix = card ? cardPrefix(card.cardId) : "";
   const isOpportunity = card?.deck === "opportunity";
-  const tone = isOpportunity ? "#5fbf95" : card && card.amount < 0 ? "#e2706b" : "#f0a832";
+  const tone = isOpportunity ? "#68bf93" : card && card.amount < 0 ? "#e8877c" : "#f2a900";
   const deckArt = isOpportunity ? "game-icons:open-treasure-chest" : "game-icons:card-random";
   const effect = found ? effectLine(found.card.effect) : null;
   const base = found?.card.effect.type === "cash" ? found.card.effect.amount ?? 0 : 0;
@@ -101,22 +101,22 @@ export function CardReveal({ card, state, names, onClose }: Props) {
               animate={{ rotateY: flipped ? 0 : 180 }}
               transition={{ duration: reduced ? 0.15 : 0.7, ease: [0.3, 0.7, 0.2, 1] }}
             >
-              <div className="absolute inset-0 flex flex-col overflow-hidden rounded-[22px] border bg-[#f5f0e8] text-[#111d34] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)]" style={{ backfaceVisibility: "hidden", borderColor: tone }}>
+              <div className="absolute inset-0 flex flex-col overflow-hidden rounded-[22px] border bg-[#fffaf0] text-[#20204a] shadow-[0_30px_80px_-20px_rgba(32,32,74,0.5)]" style={{ backfaceVisibility: "hidden", borderColor: tone }}>
                 <div className="flex items-center gap-2 px-4 py-3" style={{ background: tone }}>
-                  <ArtIcon name={deckArt} size={18} color="#0c1528" />
-                  <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-[#0c1528]">{isOpportunity ? t("card.opportunity") : t("card.event")}</span>
-                  <span className="ml-auto truncate font-mono text-[10px] text-[#0c1528]/75">{player ? t("card.for", { name: names[card.player] ?? "" }) : ""}</span>
+                  <ArtIcon name={deckArt} size={18} color="#20204a" />
+                  <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-[#20204a]">{isOpportunity ? t("card.opportunity") : t("card.event")}</span>
+                  <span className="ml-auto truncate font-mono text-[10px] text-[#20204a]/75">{player ? t("card.for", { name: names[card.player] ?? "" }) : ""}</span>
                 </div>
                 <div className="relative flex flex-1 flex-col overflow-hidden px-5 pb-4 pt-4">
                   <ArtIcon name={deckArt} size={190} color={tone} className="pointer-events-none absolute -right-10 top-24 opacity-[0.12]" />
                   <h2 className="font-serif text-[28px] font-black italic leading-[1.05]">{d(`${prefix}.title`)}</h2>
                   {card.amount !== 0 && found?.card.effect.type === "cash" && (
-                    <div className={`mt-4 self-start rounded-xl px-3 py-1.5 font-mono text-3xl font-semibold ${card.amount > 0 ? "bg-[#3cc48e]/20 text-[#17704a]" : "bg-[#e2706b]/15 text-[#a3352f]"}`}>
+                    <div className={`mt-4 self-start rounded-xl px-3 py-1.5 font-mono text-3xl font-semibold ${card.amount > 0 ? "bg-[#24734d]/15 text-[#17704a]" : "bg-[#a83c38]/12 text-[#8f292b]"}`}>
                       {card.amount > 0 ? "+" : "−"}
                       {money(Math.abs(card.amount))}
                     </div>
                   )}
-                  {effect && <div className="mt-3 self-start rounded-xl bg-[#111d34]/8 px-3 py-1.5 font-mono text-[13px] font-semibold">{effect}</div>}
+                  {effect &&                   <div className="mt-3 self-start rounded-xl bg-[#20204a]/8 px-3 py-1.5 font-mono text-[13px] font-semibold">{effect}</div>}
                   {saved > 0 && (
                     <div className="mt-2 flex items-center gap-1.5 text-[13px] font-medium text-[#17704a]">
                       <ShieldCheck size={16} strokeWidth={iconStroke} aria-hidden />
@@ -132,18 +132,18 @@ export function CardReveal({ card, state, names, onClose }: Props) {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 8 }}
                           transition={{ duration: 0.18 }}
-                          className="rounded-2xl border border-[#c07d10]/30 bg-[#fff8e6] p-3"
+                          className="rounded-2xl border border-[#785000]/30 bg-[#fffaf0] p-3"
                           data-testid="card-tip"
                         >
-                          <div className="flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#c07d10]">
+                          <div className="flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#785000]">
                             <Lightbulb size={14} strokeWidth={iconStroke} aria-hidden />
                             {t("card.realLife")}
-                            <button type="button" onClick={() => setInfo(false)} aria-label={t("card.infoClose")} className="-my-2 -mr-2 ml-auto flex h-9 w-9 items-center justify-center rounded-lg text-[#c07d10]">
+                            <button type="button" onClick={() => setInfo(false)} aria-label={t("card.infoClose")} className="-my-2 -mr-2 ml-auto flex h-9 w-9 items-center justify-center rounded-lg text-[#785000]">
                               <X size={15} strokeWidth={iconStroke} aria-hidden />
                             </button>
                           </div>
-                          <p className="mt-0.5 text-[13px] leading-snug text-[#30405f]">{d(`${prefix}.text`)}</p>
-                          <p className="mt-1 text-[13px] leading-snug text-[#30405f]">{d(`${prefix}.tip`)}</p>
+                          <p className="mt-0.5 text-[13px] leading-snug text-[#55536d]">{d(`${prefix}.text`)}</p>
+                          <p className="mt-1 text-[13px] leading-snug text-[#55536d]">{d(`${prefix}.tip`)}</p>
                         </motion.div>
                       ) : (
                         <motion.button
@@ -156,7 +156,7 @@ export function CardReveal({ card, state, names, onClose }: Props) {
                           aria-label={t("card.info")}
                           aria-expanded={false}
                           data-testid="card-info"
-                          className="flex h-11 w-11 items-center justify-center rounded-full border border-[#c07d10]/40 bg-[#fff8e6] text-[#c07d10]"
+                          className="flex h-11 w-11 items-center justify-center rounded-full border border-[#785000]/40 bg-[#fffaf0] text-[#785000]"
                         >
                           <Info size={20} strokeWidth={iconStroke} aria-hidden />
                         </motion.button>

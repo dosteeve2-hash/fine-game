@@ -1,9 +1,12 @@
-const CACHE = "fine-v6";
+const CACHE = "fine-v7";
 const MASCOT = ["idle", "happy", "thinking", "surprised", "worried", "celebrate"].map(name => `/mascot/${name}.webp`);
 const SHELL = [
   "/",
   "/logos/fine-sceau-rond.svg",
   "/logos/fine-sceau-rond-clair.svg",
+  "/brand/logo.svg",
+  "/brand/logo-sombre.svg",
+  "/brand/mark.svg",
   "/favicon.ico",
   "/favicon-32.png",
   ...MASCOT,
