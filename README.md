@@ -13,7 +13,7 @@ FINE s’installe comme une application depuis le navigateur (PWA), sans store :
 - **Android / Chrome** : bouton « Installer l’application » sur l’écran d’accueil du jeu (ou menu ⋮ → Installer).
 - **iPhone / Safari** : Partager → « Sur l’écran d’accueil ». Une petite fiche l’explique une seule fois.
 
-Une fois installée : plein écran, orientation portrait, icône adaptative, écran de démarrage, jeu hors ligne (service worker `public/sw.js`). Les images d’application sont générées par `python scripts/make-app-images.py`.
+Une fois installée : plein écran, orientation portrait, icône adaptative, écran de démarrage, jeu hors ligne (service worker `public/sw.js`). Les images d’application sont générées par `node scripts/make-app-images.mjs`.
 
 ### Plus tard : les stores (rien n’est engagé aujourd’hui)
 
