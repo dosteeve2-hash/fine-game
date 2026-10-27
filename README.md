@@ -1,4 +1,6 @@
-# FINE Game
+<p align="center"><img src="public/brand/mark.svg" alt="FINE Game" width="72" height="72"></p>
+
+<h1 align="center">FINE Game</h1>
 
 **Fin**ancial **E**ducation Game : un jeu de plateau numérique, hors ligne, pour tous les âges. On joue, on apprend sans qu'on nous fasse la leçon.
 
