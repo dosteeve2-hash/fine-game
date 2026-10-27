@@ -28,13 +28,13 @@ const stills: Record<SceneKind, ArtName> = {
 };
 
 const tones: Record<SceneKind, string> = {
-  salary: "#f0a832",
-  tax: "#e2706b",
+  salary: "#f2a900",
+  tax: "#e8877c",
   bank: "#e3be7a",
   circle: "#9fc2e0",
   rest: "#a9b2c6",
-  audit: "#e2706b",
-  auditExit: "#3cc48e",
+  audit: "#e8877c",
+  auditExit: "#72c897",
   restart: "#9fc2e0"
 };
 
@@ -51,7 +51,7 @@ function Rain({ count, size, reduced }: { count: number; size: number; reduced: 
           animate={{ y: size * 3.4, opacity: [0, 1, 1, 0], rotate: i % 2 ? 160 : -140 }}
           transition={{ duration: 1.1, delay: (i % 6) * 0.08 + Math.floor(i / 6) * 0.18, ease: "easeIn" }}
         >
-          <ArtIcon name="game-icons:coins" size={size * 0.34} color="#f7c060" />
+          <ArtIcon name="game-icons:coins" size={size * 0.34} color="#f2a900" />
         </motion.span>
       ))}
     </>
@@ -166,7 +166,7 @@ function Picture({ kind, size, reduced }: { kind: SceneKind; size: number; reduc
           <ArtIcon name="game-icons:exit-door" size={big} color="#d9dfeb" />
         </motion.div>
         <motion.div className="absolute" style={{ right: 0, bottom: size * 0.05 }} initial={{ scale: 1.8, opacity: 0, rotate: -18 }} animate={{ scale: 1, opacity: 1, rotate: -12 }} transition={{ delay: 0.4, type: "spring", stiffness: 380, damping: 18 }}>
-          <ArtIcon name="game-icons:stamper" size={size * 0.28} color="#3cc48e" />
+          <ArtIcon name="game-icons:stamper" size={size * 0.28} color="#24734d" />
         </motion.div>
       </>
     ),
@@ -178,7 +178,7 @@ function Picture({ kind, size, reduced }: { kind: SceneKind; size: number; reduc
           </motion.div>
         </motion.div>
         <motion.div initial={{ opacity: 0, y: size * 0.12, rotate: -20 }} animate={{ opacity: 1, y: 0, rotate: 0 }} transition={{ delay: reduced ? 0 : 0.85, duration: 0.6 }}>
-          <ArtIcon name="game-icons:sun" size={big} color="#f7c060" />
+          <ArtIcon name="game-icons:sun" size={big} color="#f2a900" />
         </motion.div>
       </>
     )

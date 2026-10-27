@@ -31,7 +31,7 @@ function Flight({ flight, onDone }: { flight: CoinFlight; onDone: (id: number) =
           key={index}
           className="pointer-events-none fixed left-0 top-0 z-[60] block h-4 w-4 rounded-full"
           style={{
-            background: "radial-gradient(circle at 35% 30%, #ffe3a1 0%, #f0a832 55%, #a8670b 100%)",
+            background: "radial-gradient(circle at 35% 30%, #ffe3a1 0%, #f2a900 55%, #a8670b 100%)",
             boxShadow: "0 0 0 1px rgba(122,74,6,0.8), 0 4px 10px rgba(0,0,0,0.5)"
           }}
           initial={{ x: from.x - 8, y: from.y - 8, scale: 0.4, opacity: 0 }}

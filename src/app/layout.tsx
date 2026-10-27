@@ -1,17 +1,17 @@
 import type { ReactNode } from "react";
 import type { Metadata, Viewport } from "next";
-import { Outfit, Playfair_Display, JetBrains_Mono } from "next/font/google";
+import { Lilita_One, Outfit, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { RegisterServiceWorker } from "../ui/RegisterServiceWorker";
 import startupImages from "./startup-images.json";
 
-const playfair = Playfair_Display({ subsets: ["latin"], style: ["normal", "italic"], weight: ["700", "900"], variable: "--font-playfair" });
-const outfit = Outfit({ subsets: ["latin"], weight: ["300", "400", "500", "600"], variable: "--font-outfit" });
-const jetbrains = JetBrains_Mono({ subsets: ["latin"], weight: ["400", "600"], variable: "--font-jetbrains" });
+const lilita = Lilita_One({ subsets: ["latin", "latin-ext"], weight: "400", variable: "--font-lilita" });
+const outfit = Outfit({ subsets: ["latin", "latin-ext"], weight: ["300", "400", "500", "600"], variable: "--font-outfit" });
+const jetbrains = JetBrains_Mono({ subsets: ["latin", "latin-ext"], weight: ["400", "600"], variable: "--font-jetbrains" });
 
 export const metadata: Metadata = {
   title: "FINE Game",
-  description: "Joue, investis, deviens libre : le jeu de plateau d’éducation financière, jouable hors ligne.",
+  description: "Jouez avec l'argent pour apprendre à le garder. Un jeu de plateau éducatif jouable hors ligne.",
   manifest: "/manifest.webmanifest",
   applicationName: "FINE",
   icons: { icon: [{ url: "/icon.svg", type: "image/svg+xml" }, { url: "/favicon-32.png", sizes: "32x32", type: "image/png" }, { url: "/favicon.ico", sizes: "48x48" }], apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }] },
@@ -21,16 +21,16 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#070e1f",
+  themeColor: "#f5efdf",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  colorScheme: "dark"
+  colorScheme: "light"
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="fr" className={`${playfair.variable} ${outfit.variable} ${jetbrains.variable}`}>
+    <html lang="fr" className={`${lilita.variable} ${outfit.variable} ${jetbrains.variable}`}>
       <body>
         {children}
         <RegisterServiceWorker />

@@ -36,8 +36,8 @@ function clamp(value: number, min: number, max: number) {
 function House({ size, color }: { size: number; color: string }) {
   return (
     <svg viewBox="0 0 12 12" width={size} height={size} aria-hidden>
-      <path d="M1.5 6.2 6 2l4.5 4.2V10.5h-9z" fill={color} stroke="#070e1f" strokeWidth={1} strokeLinejoin="round" />
-      <rect x={4.8} y={7} width={2.4} height={3.5} fill="#070e1f" opacity={0.55} />
+      <path d="M1.5 6.2 6 2l4.5 4.2V10.5h-9z" fill={color} stroke="#20204a" strokeWidth={1} strokeLinejoin="round" />
+      <rect x={4.8} y={7} width={2.4} height={3.5} fill="#20204a" opacity={0.55} />
     </svg>
   );
 }
@@ -107,7 +107,7 @@ function Tile({ index, space, rect, unit, ux, uy, owner, level, onOpen }: TilePr
               : rect.corner
                 ? "linear-gradient(150deg, #172540 0%, #0d172b 75%)"
                 : "linear-gradient(160deg, #121e36 0%, #0c1629 100%)",
-        border: `1px solid ${ownerColor ? withAlpha(ownerColor, 0.8) : isStart ? withAlpha("#f0a832", 0.65) : danger ? withAlpha("#e2706b", 0.5) : rect.corner ? withAlpha("#f0a832", 0.28) : "#1c2b4a"}`,
+        border: `1px solid ${ownerColor ? withAlpha(ownerColor, 0.8) : isStart ? withAlpha("#f2a900", 0.65) : danger ? withAlpha("#e2706b", 0.5) : rect.corner ? withAlpha("#f2a900", 0.28) : "#404061"}`,
         boxShadow: ownerColor ? `inset 0 0 0 1px ${withAlpha(ownerColor, 0.22)}` : "inset 0 1px 0 rgba(255,255,255,0.035)"
       }}
     >
@@ -149,7 +149,7 @@ function Tile({ index, space, rect, unit, ux, uy, owner, level, onOpen }: TilePr
           </span>
         )}
         {isStart && (
-          <ChevronsUp aria-hidden strokeWidth={iconStroke} size={clamp(unit * 0.3, 10, 22)} color="#f0a832" style={{ transform: `rotate(${sideRotation[rect.side]}deg)` }} />
+          <ChevronsUp aria-hidden strokeWidth={iconStroke} size={clamp(unit * 0.3, 10, 22)} color="#f2a900" style={{ transform: `rotate(${sideRotation[rect.side]}deg)` }} />
         )}
       </span>
     </button>
@@ -267,7 +267,7 @@ export function Board({ view, stage, onOpenSpace, center, camera = false, hud }:
             width: boardWidth,
             height: boardHeight,
             borderRadius: Math.max(12, unit * 0.3),
-            background: "radial-gradient(120% 90% at 50% 40%, #121f39 0%, #0a1326 60%, #070e1f 100%)",
+            background: "radial-gradient(120% 90% at 50% 40%, #30305c 0%, #20204a 60%, #171738 100%)",
             boxShadow: "0 30px 80px -20px rgba(0,0,0,0.7), 0 0 0 1px #1c2b4a, inset 0 0 0 1px rgba(240,168,50,0.08)"
           }}
         >

@@ -30,7 +30,7 @@ export function Players({ state, names, ledger, onHistory, onGuide, compact = fa
         const goal = Math.max(summary.expenses, summary.freedomTarget, 1);
         const progress = Math.min(1, summary.income / goal);
         const active = index === state.currentPlayerIndex && state.phase !== "finished";
-        const color = playerColors[index] ?? "#f0a832";
+        const color = playerColors[index] ?? "#f2a900";
         return (
           <motion.li
             key={player.id}
@@ -38,8 +38,8 @@ export function Players({ state, names, ledger, onHistory, onGuide, compact = fa
             layout
             className="relative rounded-xl border bg-bg3/90"
             style={{
-              borderColor: active ? "#f0a832" : "#1f3054",
-              boxShadow: active ? `0 0 0 1px #f0a832, 0 0 26px -6px ${withAlpha("#f0a832", 0.75)}, inset 3px 0 0 ${color}` : `inset 3px 0 0 ${withAlpha(color, 0.7)}`
+              borderColor: active ? "#f2a900" : "#cfc2aa",
+              boxShadow: active ? `0 0 0 1px #f2a900, 0 0 26px -6px ${withAlpha("#f2a900", 0.45)}, inset 3px 0 0 ${color}` : `inset 3px 0 0 ${withAlpha(color, 0.7)}`
             }}
             animate={{ scale: active ? 1 : 0.985, opacity: active || !compact ? 1 : 0.82 }}
             transition={{ type: "spring", stiffness: 260, damping: 24 }}

@@ -268,6 +268,11 @@ export function GameScreen({ truth, view, stage, names, pawns, log, ledger, stat
         <CoinLayer coins={stage.coins} onDone={onCoinsDone} />
         <CardReveal card={stage.card} state={view} names={names} onClose={onDismissCard} />
         <Scenes scene={stage.scene} state={view} names={names} onClose={onDismissScene} />
+        <div className="game-opening" aria-hidden="true">
+          <div className="opening-card"><img src="/brand/logo-sombre.svg" width="72" height="22" alt="" /></div>
+          <span className="opening-die" />
+          <div className="opening-card"><img src="/brand/logo-sombre.svg" width="72" height="22" alt="" /></div>
+        </div>
         <AssetsSheet
           open={assetsOpen}
           state={truth}

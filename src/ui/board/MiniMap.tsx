@@ -47,7 +47,7 @@ export function MiniMap({ view, orientation, window: frame, width, onPress }: Pr
         })}
         {view.players.map((player, index) => {
           const point = pawnPoint(player.position, index, orientation, scale, scale);
-          return <circle key={player.id} cx={point.x} cy={point.y} r={Math.max(1.6, scale * 0.22)} fill={playerColors[index] ?? "#f0a832"} stroke="#070e1f" strokeWidth={0.6} />;
+          return <circle key={player.id} cx={point.x} cy={point.y} r={Math.max(1.6, scale * 0.22)} fill={playerColors[index] ?? "#f2a900"} stroke="#20204a" strokeWidth={0.6} />;
         })}
         <rect
           x={Math.max(0, frame.x * scale)}

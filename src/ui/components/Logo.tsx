@@ -16,8 +16,8 @@ interface Props {
 }
 
 const files: Record<Variant, Record<Tone, string>> = {
-  seal: { dark: "/logos/fine-sceau-rond.svg", light: "/logos/fine-sceau-rond-clair.svg" },
-  horizontal: { dark: "/logos/fine-5-sceau-horizontal.svg", light: "/logos/fine-5-sceau-horizontal-clair.svg" }
+  seal: { dark: "/brand/mark.svg", light: "/brand/mark.svg" },
+  horizontal: { dark: "/brand/logo.svg", light: "/brand/logo-sombre.svg" }
 };
 
 const ratios: Record<Variant, number> = { seal: 1, horizontal: 1000 / 220 };
